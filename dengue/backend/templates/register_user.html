@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register Account - AI Dengue Hotspot Predictor</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'backend/css/login.css' %}" />
+    <style>
+      @font-face {
+        font-family: "inter";
+        src: url(../fonts/inter.ttf);
+      }
+
+      @font-face {
+        font-family: "poppins";
+        src: url(../fonts/Poppins-Regular.ttf);
+      }
+
+      .register-container h2 {
+        height: auto;
+        font-size: 45px;
+        font-style: italic;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+        padding-bottom: 30px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .register-container h2 span {
+        font-family: "inter";
+        position: absolute;
+        font-style: normal;
+        font-size: 16px;
+        color: rgb(232, 232, 232);
+        font-weight: bold;
+        left: 0;
+        top: 50px;
+        text-transform: none;
+      }
+
+      .register-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        padding: 40px;
+      }
+
+      .register-form input[type="text"],
+      .register-form input[type="password"],
+      .register-form input[type="email"],
+      .register-form select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 10px;
+        background-color: #0c4b89c2;
+        color: #ffffff;
+        font-size: 15px;
+      }
+
+      .register-form input::placeholder,
+      .register-form select {
+        color: #bdc3c7;
+      }
+
+      .register-form button {
+        width: 40%;
+        padding: 8px;
+        background: linear-gradient(90deg, #ff3131, #ff914d);
+        border: none;
+        margin-left: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      .register-form button p {
+        font-family: "Montserrat", sans-serif;
+        color: white;
+        font-size: 15px;
+        font-weight: 400;
+        margin: 0;
+      }
+
+      .register-form button:hover {
+        background: linear-gradient(90deg, #c0392b, #e74c3c);
+      }
+
+      .register-form button:disabled {
+        background: linear-gradient(90deg, #666, #999);
+        cursor: not-allowed;
+      }
+
+      .register-form p {
+        margin: 10px 10px;
+        font-size: 12px;
+        color: #27ae60;
+      }
+
+      .welcome-container {
+        padding: 20px;
+        width: 300px;
+        text-align: center;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .welcome-container span {
+        margin: 0 0 10px;
+        color: #ff0000;
+      }
+
+      .welcome-container h1 {
+        margin: 0;
+        font-size: 50px;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .register-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-radius: 10px;
+        border: none;
+        box-shadow:
+          0 1px 1px rgba(52, 50, 199, 0.5),
+          0 1px 1px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(
+          to bottom,
+          rgba(52, 50, 199, 0.5),
+          rgba(0, 0, 0, 0.5)
+        );
+        padding: 60px 0;
+        width: 450px;
+      }
+
+      .main_container {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+      }
+
+      .button_container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        width: 100%;
+      }
+
+      .alreadyhaveaccount_container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      .alreadyhaveaccount_container p {
+        color: white;
+        font-size: 15px;
+      }
+
+      .alreadyhaveaccount_container a {
+        color: #27ae60;
+        font-size: 15px;
+        font-weight: bold;
+        text-decoration: none;
+        margin-left: 5px;
+      }
+
+      .alreadyhaveaccount_container a:hover {
+        text-decoration: underline;
+        color: #ff2424;
+        font-weight: bolder;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .form-group {
+        flex: 1;
+      }
+
+      input:focus,
+      button:focus,
+      select:focus {
+        outline: none;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      input[type="email"],
+      select {
+        border: none;
+      }
+
+      .as_Admin {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        color: white;
+        font-size: 0.8rem;
+        text-decoration: none;
+      }
+
+      .as_Admin:hover {
+        text-decoration: underline;
+        color: #ff4e4e;
+        font-weight: bold;
+      }
+
+      .error-message {
+        color: #ff6b6b;
+        font-size: 14px;
+        margin-top: 5px;
+        text-align: left;
+        width: 100%;
+        display: none;
+      }
+
+      .success-message {
+        color: #27ae60;
+        font-size: 14px;
+        margin-top: 5px;
+        text-align: left;
+        width: 100%;
+        display: none;
+      }
+
+      .password-match {
+        border: 2px solid #27ae60 !important;
+      }
+
+      .password-mismatch {
+        border: 2px solid #ff6b6b !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main_container">
+      <div class="register-container">
+        <h2>sign up</h2>
+
+        <div class="register-form">
+          <form method="post" class="input_container" id="registerForm">
+            {% csrf_token %}
+
+            <div class="form-row">
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  placeholder="First Name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  placeholder="Last Name"
+                  required
+                />
+              </div>
+            </div>
+
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Username"
+              required
+            />
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Email Address"
+              required
+            />
+
+            <select id="barangay" name="barangay" required>
+              <option value="" disabled selected>Select Barangay</option>
+              {% for barangay in barangays %}
+              <option value="{{ barangay.pk }}">{{ barangay.name }}</option>
+              {% endfor %}
+            </select>
+
+            <input
+              type="password"
+              id="password1"
+              name="password1"
+              placeholder="Password"
+              required
+            />
+
+            <input
+              type="password"
+              id="password2"
+              name="password2"
+              placeholder="Confirm Password"
+              required
+            />
+            <div class="error-message" id="passwordError">
+              Passwords do not match!
+            </div>
+            <div class="success-message" id="passwordSuccess">
+              Passwords match!
+            </div>
+
+            <div class="button_container">
+              <button type="submit" id="submitBtn">
+                <p>Create Account</p>
+              </button>
+            </div>
+          </form>
+
+          <div class="alreadyhaveaccount_container">
+            <p>Already have an account?</p>
+            <a href="{% url 'login' %}">Sign in</a>
+          </div>
+        </div>
+      </div>
+      <div class="welcome-container">
+        <h1><span>AI</span> DENGUE HOTSPOT PREDICTOR</h1>
+      </div>
+      <a href="{% url 'login-admin' %}" class="as_Admin">Login as Admin</a>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <script src="/static/backend/js/notification.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const password1 = document.getElementById("password1");
+        const password2 = document.getElementById("password2");
+        const passwordError = document.getElementById("passwordError");
+        const passwordSuccess = document.getElementById("passwordSuccess");
+        const submitBtn = document.getElementById("submitBtn");
+        const registerForm = document.getElementById("registerForm");
+
+        function checkPasswordMatch() {
+          const password1Value = password1.value;
+          const password2Value = password2.value;
+
+          // Reset styles and messages
+          password1.classList.remove("password-match", "password-mismatch");
+          password2.classList.remove("password-match", "password-mismatch");
+          passwordError.style.display = "none";
+          passwordSuccess.style.display = "none";
+          submitBtn.disabled = false;
+
+          if (password1Value && password2Value) {
+            if (password1Value === password2Value) {
+              password1.classList.add("password-match");
+              password2.classList.add("password-match");
+              passwordSuccess.style.display = "block";
+            } else {
+              password1.classList.add("password-mismatch");
+              password2.classList.add("password-mismatch");
+              passwordError.style.display = "block";
+              submitBtn.disabled = true;
+            }
+          }
+        }
+
+        password1.addEventListener("input", checkPasswordMatch);
+        password2.addEventListener("input", checkPasswordMatch);
+
+        registerForm.addEventListener("submit", function (e) {
+          if (password1.value !== password2.value) {
+            e.preventDefault();
+            passwordError.style.display = "block";
+            password1.classList.add("password-mismatch");
+            password2.classList.add("password-mismatch");
+            submitBtn.disabled = true;
+
+            passwordError.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        });
+      });
+    </script>
+    <script src="/static/backend/js/notification.js"></script>
+  </body>
+</html>

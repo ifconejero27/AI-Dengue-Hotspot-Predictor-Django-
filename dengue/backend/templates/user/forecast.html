@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../../static/backend/css/fonts.css">
+    <link rel="stylesheet" href="../../static/backend/css/user-forecast.css">
+    <title>Weather Forecast for {{ current.location }}</title>
+</head>
+<body>
+    <nav>
+        <div class="nav-btn">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="title">
+            <span>Weather</span> Forecast
+        </div>
+        <div class="profile">
+            <i class="fa-solid fa-user" id="pf"></i>
+            <div class="profile-modal" id="profile-modal">
+              <div class="pf-img">
+                <img src="/static/backend/img/user-white.png" alt="">
+              </div>
+              <h2>@{{ user_username }}</h2>
+              <p>{{ user_name }}</p>
+              <div style="display: flex; margin-top: 10px;">
+                <!-- <i class="fa-solid fa-location-dot"></i> -->
+                 <span>Barangay:</span>
+                <span style="margin-left: 5px;">{{ user_barangay }}</span>
+              </div>
+              <div style="width: 100%;">
+                <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+                <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+              </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="main-menu">
+          <ul>
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                  <a href="{% url 'user-dengue-case-table' %}">
+                    <i class="fa-solid fa-head-side-mask"></i>
+                    <span>Dengue Cases</span>
+                  </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-report' %}">
+                        <i class="fa-solid fa-file-export"></i>
+                        <span>Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-message' %}">
+                        <i class="fa-solid fa-message"></i>
+                        <span>Message</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user_forecast' %}">
+                        <i class="fa-solid fa-cloud-bolt"></i>
+                        <span>Weather</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Data Status Indicator -->
+            <div class="data-status">
+                <span class="status-indicator {% if data_source == 'database' %}status-live{% else %}status-fallback{% endif %}">
+                    <i class="fas fa-database"></i>
+                    Data Source: {{ data_source|title }}
+                </span>
+                {% if current.updated_at %}
+                <span class="last-updated">
+                    Last updated: {{ current.updated_at }}
+                </span>
+                {% endif %}
+                <form method="POST" action="{% url 'refresh-weather-data' %}" class="refresh-form">
+                    {% csrf_token %}
+                    <button type="submit" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </form>
+            </div>
+
+            <div class="tab-container">
+                    <button class="tab-btn active" id="current" data-tab="tab1">Currently</button>
+                    <button class="tab-btn" id="hour" data-tab="tab2">Hourly</button>
+                    <button class="tab-btn" id="daily" data-tab="tab3">Daily</button>
+                </div>
+
+            <div class="section">
+                
+                <div class="table-content">
+                    <div class="tab-panel active" id="tab1">
+                        {% if current %}
+                        <table>
+                            <tr>
+                                <th>Time</th>
+                                <th>Temperature</th>
+                                <th>Rainfall Chance</th>
+                                <th>Humidity</th>
+                                <th>Wind Speed (km/h)</th>
+                                <th>Weather Code</th>
+                            </tr>
+                            <tr>
+                                <td>{{ current.time }}</td>
+                                <td>{{ current.temperature }}°C</td>
+                                <td>{{ current.rainfall_chance }}%</td>
+                                <td>{{ current.humidity }}%</td>
+                                <td>{{ current.wind_speed_10m }}</td>
+                                <td>{{ current.weather_code }}</td>
+                            </tr>
+                        </table>
+                        {% else %}
+                        <div class="no-data">
+                            <i class="fas fa-cloud-slash"></i>
+                            <p>No current weather data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="tab-panel" id="tab2">
+                        {% if hourly_list %}
+                        <table>
+                            <tr>
+                                <th>Date</th>
+                                <th>Temperature</th>
+                                <th>Rainfall Chance</th>
+                                <th>Humidity</th>
+                                <th>Wind Speed (km/h)</th>
+                                <th>Weather Code</th>
+                            </tr>
+                            {% for hour in hourly_list %}
+                            <tr>
+                                <td>{{ hour.date }}</td>
+                                <td>{{ hour.temperature_2m }}°C</td>
+                                <td>{{ hour.precipitation_probability }}%</td>
+                                <td>{{ hour.relative_humidity_2m }}%</td>
+                                <td>{{ hour.wind_speed_10m }}</td>
+                                <td>{{ hour.weather_code }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        {% else %}
+                        <div class="no-data">
+                            <i class="fas fa-cloud-slash"></i>
+                            <p>No hourly forecast data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="tab-panel" id="tab3">
+                        {% if daily_list %}
+                        <table>
+                            <tr>
+                                <th>Date</th>
+                                <th>Max Temperature</th>
+                                <th>Min Temperature</th>
+                                <th>Rainfall Chance</th>
+                                <th>Wind Speed (km/h)</th>
+                                <th>Weather Code</th>
+                            </tr>
+                            {% for day in daily_list %}
+                            <tr>
+                                <td>{{ day.date }}</td>
+                                <td>{{ day.temperature_2m_max }}°C</td>
+                                <td>{{ day.temperature_2m_min }}°C</td>
+                                <td>{{ day.precipitation_probability_max }}%</td>
+                                <td>{{ day.wind_speed_10m_max }}</td>
+                                <td>{{ day.weather_code }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        {% else %}
+                        <div class="no-data">
+                            <i class="fas fa-cloud-slash"></i>
+                            <p>No daily forecast data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="userInfo" hidden>
+      <span id="user_barangay_name">{{ user_barangay }}</span>
+      <span id="user_barangay_lat">{{ user_barangay_lat }}</span>
+      <span id="user_barangay_long">{{ user_barangay_long }}</span>
+      <input type="checkbox" id="is_admin" value="{{ is_admin }}" disabled>
+    </div>
+
+    <script src="../../static/backend/js/menu.js"></script>
+    <script>
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Add loading state to refresh button
+        document.querySelector('.refresh-form')?.addEventListener('submit', function(e) {
+            const btn = this.querySelector('.refresh-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            btn.disabled = true;
+        });
+    </script>
+</body>
+</html>

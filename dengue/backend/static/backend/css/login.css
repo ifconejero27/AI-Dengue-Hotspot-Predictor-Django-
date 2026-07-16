@@ -1,0 +1,228 @@
+@font-face {
+  font-family: "inter";
+  src: url(../fonts/inter.ttf);
+}
+
+@font-face {
+  font-family: "poppins";
+  src: url(../fonts/Poppins-Regular.ttf);
+}
+
+* {
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: url("../img/bg-login.png") no-repeat center center fixed;
+  background-position: center;
+  background-size: cover;
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  height: 100vh;
+  width: 100%;
+  color: white;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.login-container h2 {
+  height: auto;
+  font-size: 45px;
+  font-style: italic;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  padding-bottom: 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-container h2 span {
+  font-family: "inter";
+  position: absolute;
+  font-style: normal;
+  font-size: 16px;
+  color: rgb(232, 232, 232);
+  font-weight: bold;
+  left: 0;
+  top: 50px;
+  text-transform: none;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 40px;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: hwb(from color h w b);
+  border-radius: 10px;
+  background-color: #0c4b89c2;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.login-form input[type="text"]::placeholder,
+.login-form input[type="password"]::placeholder {
+  color: #bdc3c7;
+}
+
+.login-form button {
+  width: 30%;
+  padding: 2px;
+  background: linear-gradient(90deg, #ff3131, #ff914d);
+  border: none;
+  margin-left: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login-form button p {
+  font-family: "Montserrat", sans-serif;
+  color: white;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.login-form button:hover {
+  background: linear-gradient(90deg, #c0392b, #e74c3c);
+}
+
+.login-form p {
+  margin: 10px 10px;
+  font-size: 12px;
+  color: #27ae60;
+}
+
+.welcome-container {
+  padding: 20px;
+  width: 300px;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-container span {
+  margin: 0 0 10px;
+  color: #ff0000;
+}
+
+.welcome-container h1 {
+  margin: 0;
+  font-size: 50px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  border: none;
+  box-shadow:
+    0 1px 1px rgba(52, 50, 199, 0.5),
+    0 1px 1px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(
+    to bottom,
+    rgba(52, 50, 199, 0.5),
+    rgba(0, 0, 0, 0.5)
+  );
+  padding: 90px 0;
+}
+
+.main_container {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.button_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.donthaveaccountsignup_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.donthaveaccountsignup_container p {
+  color: white;
+  font-size: 15px;
+}
+
+.donthaveaccountsignup_container a {
+  color: #27ae60;
+  font-size: 15px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.donthaveaccountsignup_container a:hover {
+  text-decoration: underline;
+  color: #ff2424;
+  font-weight: bolder;
+}
+
+.forgotpasswordcontainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.forgotpasswordcontainer a {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  display: block;
+  margin: 10px 5px;
+}
+
+input:focus,
+button:focus {
+  outline: none;
+}
+
+input[type="text"],
+input[type="password"] {
+  border: none;
+}
+
+.as_Admin {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: white;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.as_Admin:hover {
+  text-decoration: underline;
+  color: #ff4e4e;
+  font-weight: bold;
+}

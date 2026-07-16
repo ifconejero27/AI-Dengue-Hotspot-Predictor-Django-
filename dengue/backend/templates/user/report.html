@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/backend/css/user-report.css">
+    <link rel="stylesheet" href="../static/backend/css/fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Prediction Results Report</title>
+    <style>
+        /* Custom alert styles for better visual feedback */
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        }
+        
+        .custom-alert.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .custom-alert.error {
+            background: linear-gradient(135deg, #dc3545, #e83e8c);
+        }
+        
+        .custom-alert.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+        
+        .custom-alert.info {
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px;
+            float: right;
+        }
+
+        /* Template download button styles */
+        .template-download {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .template-btn {
+            display: inline-flex;
+            gap: 8px;
+            background: transparent;
+            color: #333;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .template-btn:hover {
+            color: red;
+            transform: translateY(-2px);
+        }
+
+        /* Filter section styles */
+        .filter-section {
+            padding: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e8eeff;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #f8faff;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn.reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .filter-btn.toggle {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 20px;
+            width: 100%;
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 35px 8px 12px;
+            border: 2px solid #e8eeff;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .results-count {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: #273645;
+        }
+
+        .sortable i {
+            margin-left: 5px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-btn">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="title">
+            <span>Re</span>port
+        </div>
+        <div class="profile">
+            <i class="fa-solid fa-user" id="pf"></i>
+            <div class="profile-modal" id="profile-modal">
+              <div class="pf-img">
+                <img src="/static/backend/img/user-white.png" alt="">
+              </div>
+              <h2>@{{ user_username }}</h2>
+              <p>{{ user_name }}</p>
+              <div style="display: flex; margin-top: 10px;">
+                <span>Barangay:</span>
+                <span style="margin-left: 5px;">{{ user_barangay }}</span>
+              </div>
+              <div style="width: 100%;">
+                <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+                <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+              </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="main-menu">
+            <ul>
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                  <a href="{% url 'user-dengue-case-table' %}">
+                    <i class="fa-solid fa-head-side-mask"></i>
+                    <span>Dengue Cases</span>
+                  </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-report' %}">
+                        <i class="fa-solid fa-file-export"></i>
+                        <span>Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-message' %}">
+                        <i class="fa-solid fa-message"></i>
+                        <span>Message</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user_forecast' %}">
+                        <i class="fa-solid fa-cloud-bolt"></i>
+                        <span>Weather</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+
+            <div class="tab-container">
+                <button class="tab-btn active" id="manual" data-tab="tab1">Manual</button>
+                <button class="tab-btn " id="upload" data-tab="tab2">Upload</button>
+                <button class="tab-btn" id="download" data-tab="tab3">Download</button>
+            </div>
+            
+            <div class="section">
+
+                <div class="tabs">
+                    <div class="tab-panel manual-container active" id="tab1">
+                        <!-- Manual tab content remains the same -->
+                        <div class="wrapper-calendar">
+                            <div class="selected-week-display" id="selected-week-display">
+                                <h2><i class="fa-solid fa-calendar-week"></i> Manual Report Submission</h2>
+                                <p class="desc">Click on any week in the calendar to select your reporting period</p>
+                                <div class="selected-week-info">
+                                    <h3>Selected Reporting Period</h3>
+                                    <div class="week-range" id="week-range-text"></div>
+                                </div>
+                                    
+                                <form action="{% url 'submit-manual-report' %}" method="post" id="manual-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="barangay" name="barangay" value="{{ user_barangay }}">
+                                        
+                                    <div class="selected-inputs">
+                                        <div class="input-group">
+                                            <label for="week">Week Number:</label>
+                                            <input type="number" id="week" name="week" required>
+                                        </div>
+                                            
+                                        <div class="input-group">
+                                            <label for="year">Year:</label>
+                                            <input type="number" id="year" name="year" required>
+                                        </div>
+                                            
+                                        <div class="input-group">
+                                            <label for="cases">Number of Cases:</label>
+                                            <input type="number" id="cases" name="cases" min="0" placeholder="0" required>
+                                        </div>
+                                    </div>
+                                    <center>
+                                        <button type="submit" class="submit-btn-week">
+                                            <i class="fa-solid fa-paper-plane"></i> Submit Report
+                                        </button>
+                                    </center>
+                                </form>
+                            </div>
+
+                            <div class="calendar-container">
+                                <!-- Calendar Header -->
+                                <div class="calendar-header">
+                                    <button class="calendar-nav" id="prev-month">
+                                        <i class="fa-solid fa-chevron-left"></i> Prev
+                                    </button>
+                                    <div class="calendar-title" id="current-month-year">September 2024</div>
+                                    <button class="calendar-nav" id="next-month">
+                                        Next <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Calendar Grid -->
+                                <div class="calendar-grid">
+                                    <!-- Weekday Headers -->
+                                    <div class="calendar-weekday">Sun</div>
+                                    <div class="calendar-weekday">Mon</div>
+                                    <div class="calendar-weekday">Tue</div>
+                                    <div class="calendar-weekday">Wed</div>
+                                    <div class="calendar-weekday">Thu</div>
+                                    <div class="calendar-weekday">Fri</div>
+                                    <div class="calendar-weekday">Sat</div>
+                                    
+                                    <!-- Calendar Days will be populated by JavaScript -->
+                                    <div id="calendar-days"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-container tab-panel" id="tab2">
+                        <h2><i class="fa-solid fa-upload"></i> Upload Report Files</h2>
+                        <p>Drag and drop your Dengue cases report here, or click to browse. Supported format: CSV.<br><button onclick="downloadTemplate()" class="template-btn"><i class="fa-solid fa-download"></i> Download CSV Template</button></p>
+                            
+                        
+                        <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'upload-csv-report' %}">
+                            {% csrf_token %}
+                            <div class="upload-area" id="upload-area">
+                                <i class="fa-solid fa-cloud-upload-alt upload-icon"></i>
+                                <div class="upload-text">Drop your CSV file here</div>
+                                <div class="upload-subtext">or click to select</div>
+                                <input type="file" id="file-input" name="file" accept=".csv" style="display: none;">
+                                <center>
+                                    <label for="file-input" class="file-input-label">
+                                        <i class="fa-solid fa-folder-open"></i> Choose CSV File
+                                    </label>
+                                </center>
+                            </div>
+                            
+                            <!-- Year input will be added here dynamically -->
+                            <div class="file-list empty" id="file-list">
+                                <!-- File item will be dynamically added here -->
+                            </div>
+                            
+                            <!-- Hidden year input that will be populated -->
+                            <input type="hidden" id="upload-year" name="year" value="">
+                            
+                            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                                <i class="fa-solid fa-paper-plane"></i> Upload File
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="download-container tab-panel" id="tab3">
+                        <div class="header">
+                            <h2>Prediction Results Report</h2>
+                            <!-- Filter Toggle Button -->
+                            <button class="filter-btn toggle" id="filter-toggle">
+                                <i class="fas fa-filter"></i> Show Filters
+                            </button>
+                        </div>
+                        
+                        
+                        <!-- Filter Section -->
+                        <div class="filter-section" id="prediction-filter-section">
+                            <h3 style="margin-top: 0; margin-bottom: 15px;">Filter Prediction Results</h3>
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <label for="barangay-filter">Barangay</label>
+                                    <select id="barangay-filter">
+                                        <option value="">All Barangays</option>
+                                        <option value="Acacia">Acacia</option>
+                                        <option value="Baritan">Baritan</option>
+                                        <option value="Bayan-bayanan">Bayan-bayanan</option>
+                                        <option value="Catmon">Catmon</option>
+                                        <option value="Concepcion">Concepcion</option>
+                                        <option value="Dampalit">Dampalit</option>
+                                        <option value="Flores">Flores</option>
+                                        <option value="Hulong Duhat">Hulong Duhat</option>
+                                        <option value="Ibaba">Ibaba</option>
+                                        <option value="Longos">Longos</option>
+                                        <option value="Maysilo">Maysilo</option>
+                                        <option value="Muzon">Muzon</option>
+                                        <option value="Niugan">Niugan</option>
+                                        <option value="Panghulo">Panghulo</option>
+                                        <option value="Potrero">Potrero</option>
+                                        <option value="San Agustin">San Agustin</option>
+                                        <option value="Santolan">Santolan</option>
+                                        <option value="Tañong">Tañong</option>
+                                        <option value="Tinajeros">Tinajeros</option>
+                                        <option value="Tonsuya">Tonsuya</option>
+                                        <option value="Tugatog">Tugatog</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="risk-filter">Risk Level</label>
+                                    <select id="risk-filter">
+                                        <option value="">All Risk Levels</option>
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="year-filter">Year</label>
+                                    <select id="year-filter">
+                                        <option value="">All Years</option>
+                                        {% for year in unique_years %}
+                                            <option value="{{ year }}">{{ year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label for="week-filter">Week</label>
+                                    <select id="week-filter">
+                                        <option value="">All Weeks</option>
+                                        {% for week in week_range %}
+                                            <option value="{{ week }}">Week {{ week }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-actions">
+                                    <button class="filter-btn apply" onclick="applyFilters()">
+                                        <i class="fas fa-filter"></i> Apply Filters
+                                    </button>
+                                    <button class="filter-btn reset" onclick="resetFilters()">
+                                        <i class="fas fa-redo"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-controls">
+                            <div class="results-count" id="results-count">
+                                Showing {{ predictions.count }} predictions
+                            </div> 
+                            <div class="search-box">
+                                <input type="text" id="search-input" placeholder="Search barangay">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <button class="export-btn" onclick="exportToCSV()">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                        </div>
+                        
+                        <table border="1" id="prediction-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" onclick="sortTable(0)">
+                                        Barangay <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(1)">
+                                        Risk Level <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(2)">
+                                        Numerical Risk <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(3)">
+                                        Week <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(4)">
+                                        Year <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(5)">
+                                        Confidence Score <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(6)">
+                                        Trend <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(7)">
+                                        Prediction Date <i class="fas fa-sort"></i>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                {% if predictions %}
+                                    {% for prediction in predictions %}
+                                    <tr class="prediction-row" 
+                                        data-barangay="{{ prediction.barangay.name }}"
+                                        data-risk="{{ prediction.risk_level }}"
+                                        data-numerical-risk="{{ prediction.numerical_risk_level }}"
+                                        data-week="{{ prediction.week_prediction }}"
+                                        data-year="{{ prediction.year_prediction }}"
+                                        data-confidence="{{ prediction.confidence_score }}"
+                                        data-trend="{{ prediction.trend }}"
+                                        data-date="{{ prediction.created_at|date:'M d, Y' }}">
+                                        <td>{{ prediction.barangay.name }}</td>
+                                        <td>{{ prediction.risk_level }}</td>
+                                        <td>{{ prediction.numerical_risk_level }}</td>
+                                        <td>{{ prediction.week_prediction }}</td>
+                                        <td>{{ prediction.year_prediction }}</td>
+                                        <td>{{ prediction.confidence_score }}</td>
+                                        <td>{{ prediction.trend }}</td>
+                                        <td>{{ prediction.created_at|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" style="text-align: center;">No prediction results available</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>  
+            </div>
+        </div>
+        <!-- Standard Django messages -->
+         <!-- Standard Django messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+    </main>
+
+    <div id="userInfo" hidden>
+      <span id="user_barangay_name">{{ user_barangay }}</span>
+    </div>
+
+    <script src="/static/backend/js/menu.js"></script>
+    
+    <script src="/static/backend/js/notification.js"></script>
+    
+    <script>
+        // Global variables for prediction filtering
+        let currentSortColumn = -1;
+        let currentSortDirection = 1; // 1 for ascending, -1 for descending
+        let allPredictions = [];
+
+        function downloadTemplate() {
+            window.location.href = "{% url 'download-template' %}";
+        }   
+        // Function to show custom alert
+        function showAlert(message, type = 'info') {
+            // Remove any existing alerts
+            const existingAlerts = document.querySelectorAll('.custom-alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `custom-alert ${type}`;
+            alertDiv.innerHTML = `
+                <span>${message}</span>
+                <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Function to show browser native alert
+        function showNativeAlert(message, type = 'info') {
+            const icon = type === 'success' ? '✅' : 
+                        type === 'error' ? '❌' : 
+                        type === 'warning' ? '⚠️' : 'ℹ️';
+            alert(`${icon} ${message}`);
+        }
+
+        // Check for messages from Django and show alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize prediction filtering
+            initializePredictionFiltering();
+            
+            // Filter toggle functionality
+            const filterToggle = document.getElementById('filter-toggle');
+            const filterSection = document.getElementById('prediction-filter-section');
+            
+            filterToggle.addEventListener('click', function() {
+                if (filterSection.style.display === 'block') {
+                    filterSection.style.display = 'none';
+                    filterToggle.innerHTML = '<i class="fas fa-filter"></i> Show Filters';
+                } else {
+                    filterSection.style.display = 'block';
+                    filterToggle.innerHTML = '<i class="fas fa-filter"></i> Hide Filters';
+                }
+            });
+            
+            // Check if we have any messages from the server (you can pass these via context or use a different method)
+            // For now, we'll handle form submissions and show appropriate alerts
+            
+            // Handle manual form submission
+            const manualForm = document.getElementById('manual-form');
+            if (manualForm) {
+                manualForm.addEventListener('submit', function(e) {
+                    const week = document.getElementById('week').value;
+                    const year = document.getElementById('year').value;
+                    const cases = document.getElementById('cases').value;
+                    
+                    if (!week || !year || cases === '') {
+                        e.preventDefault();
+                        showNativeAlert('Please fill in all required fields: Week, Year, and Number of Cases.', 'error');
+                        return;
+                    }
+                    
+                    if (parseInt(cases) < 0) {
+                        e.preventDefault();
+                        showNativeAlert('Number of cases cannot be negative.', 'error');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const submitBtn = this.querySelector('.submit-btn-week');
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+                    submitBtn.disabled = true;
+                    
+                    // You can show a success message after submission
+                    // This would typically be handled by the server response
+                });
+            }
+            
+            // Handle upload form submission
+            const uploadForm = document.getElementById('upload-form');
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(e) {
+                    const fileInput = document.getElementById('file-input');
+                    const yearInput = document.getElementById('upload-year');
+                    
+                    // Validate file selection
+                    if (fileInput.files.length === 0) {
+                        e.preventDefault();
+                        showNativeAlert('Please select a CSV file to upload.', 'error');
+                        return;
+                    }
+                    
+                    // Validate year input
+                    if (!yearInput.value) {
+                        e.preventDefault();
+                        showNativeAlert('Please enter the year for this report.', 'error');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const submitBtn = document.getElementById('submit-btn');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+                    
+                    // Show upload started message
+                    showAlert('Uploading CSV file... Please wait.', 'info');
+                });
+            }
+            
+            // You can also check URL parameters for success messages
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('upload_success') === 'true') {
+                showAlert('CSV file uploaded successfully! Data has been imported.', 'success');
+            }
+            if (urlParams.get('manual_success') === 'true') {
+                showAlert('Manual report submitted successfully!', 'success');
+            }
+        });
+
+        // Initialize prediction filtering
+        function initializePredictionFiltering() {
+            // Store all prediction data
+            allPredictions = Array.from(document.querySelectorAll('.prediction-row')).map(row => ({
+                element: row,
+                barangay: row.getAttribute('data-barangay'),
+                risk: row.getAttribute('data-risk'),
+                numericalRisk: parseFloat(row.getAttribute('data-numerical-risk')),
+                week: parseInt(row.getAttribute('data-week')),
+                year: parseInt(row.getAttribute('data-year')),
+                confidence: parseFloat(row.getAttribute('data-confidence')),
+                trend: row.getAttribute('data-trend'),
+                date: row.getAttribute('data-date')
+            }));
+
+            // Initialize search
+            document.getElementById('search-input').addEventListener('input', function() {
+                applyFilters();
+            });
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            const barangayFilter = document.getElementById('barangay-filter').value.toLowerCase();
+            const riskFilter = document.getElementById('risk-filter').value;
+            const yearFilter = document.getElementById('year-filter').value;
+            const weekFilter = document.getElementById('week-filter').value;
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+            let visibleCount = 0;
+
+            allPredictions.forEach(prediction => {
+                let showRow = true;
+
+                // Barangay filter
+                if (barangayFilter && !prediction.barangay.toLowerCase().includes(barangayFilter)) {
+                    showRow = false;
+                }
+
+                // Risk level filter
+                if (riskFilter && prediction.risk !== riskFilter) {
+                    showRow = false;
+                }
+
+                // Year filter
+                if (yearFilter && prediction.year !== parseInt(yearFilter)) {
+                    showRow = false;
+                }
+
+                // Week filter
+                if (weekFilter && prediction.week !== parseInt(weekFilter)) {
+                    showRow = false;
+                }
+
+                // Search filter
+                if (searchTerm) {
+                    const rowText = prediction.element.textContent.toLowerCase();
+                    if (!rowText.includes(searchTerm)) {
+                        showRow = false;
+                    }
+                }
+
+                // Show/hide row
+                prediction.element.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            });
+
+            // Update results count
+            document.getElementById('results-count').textContent = `Showing ${visibleCount} predictions`;
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('barangay-filter').value = '';
+            document.getElementById('risk-filter').value = '';
+            document.getElementById('year-filter').value = '';
+            document.getElementById('week-filter').value = '';
+            document.getElementById('search-input').value = '';
+
+            applyFilters();
+        }
+
+        // Sort table
+        function sortTable(columnIndex) {
+            const tbody = document.getElementById('table-body');
+            const rows = Array.from(tbody.querySelectorAll('.prediction-row:not([style*="display: none"])'));
+
+            // Toggle sort direction if clicking the same column
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection *= -1;
+            } else {
+                currentSortColumn = columnIndex;
+                currentSortDirection = 1;
+            }
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue, bValue;
+
+                switch(columnIndex) {
+                    case 0: // Barangay
+                        aValue = a.getAttribute('data-barangay').toLowerCase();
+                        bValue = b.getAttribute('data-barangay').toLowerCase();
+                        break;
+                    case 1: // Risk Level
+                        aValue = a.getAttribute('data-risk').toLowerCase();
+                        bValue = b.getAttribute('data-risk').toLowerCase();
+                        break;
+                    case 2: // Numerical Risk
+                        aValue = parseFloat(a.getAttribute('data-numerical-risk'));
+                        bValue = parseFloat(b.getAttribute('data-numerical-risk'));
+                        break;
+                    case 3: // Week
+                        aValue = parseInt(a.getAttribute('data-week'));
+                        bValue = parseInt(b.getAttribute('data-week'));
+                        break;
+                    case 4: // Year
+                        aValue = parseInt(a.getAttribute('data-year'));
+                        bValue = parseInt(b.getAttribute('data-year'));
+                        break;
+                    case 5: // Confidence Score
+                        aValue = parseFloat(a.getAttribute('data-confidence'));
+                        bValue = parseFloat(b.getAttribute('data-confidence'));
+                        break;
+                    case 6: // Trend
+                        aValue = a.getAttribute('data-trend').toLowerCase();
+                        bValue = b.getAttribute('data-trend').toLowerCase();
+                        break;
+                    case 7: // Prediction Date
+                        aValue = new Date(a.getAttribute('data-date'));
+                        bValue = new Date(b.getAttribute('data-date'));
+                        break;
+                    default:
+                        aValue = a.cells[columnIndex].textContent;
+                        bValue = b.cells[columnIndex].textContent;
+                }
+
+                if (aValue < bValue) return -1 * currentSortDirection;
+                if (aValue > bValue) return 1 * currentSortDirection;
+                return 0;
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sort indicators
+            updateSortIndicators(columnIndex);
+        }
+
+        // Update sort indicators
+        function updateSortIndicators(columnIndex) {
+            const headers = document.querySelectorAll('.sortable i');
+            headers.forEach(icon => {
+                icon.className = 'fas fa-sort';
+            });
+
+            const currentHeader = document.querySelectorAll('.sortable')[columnIndex];
+            const icon = currentHeader.querySelector('i');
+            icon.className = currentSortDirection === 1 ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const visibleRows = allPredictions.filter(prediction => 
+                prediction.element.style.display !== 'none'
+            );
+
+            if (visibleRows.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            let csvContent = 'Barangay,Risk Level,Numerical Risk,Week,Year,Confidence Score,Trend,Prediction Date\n';
+            
+            visibleRows.forEach(prediction => {
+                const row = prediction.element;
+                const cells = row.querySelectorAll('td');
+                const rowData = [
+                    `"${cells[0].textContent}"`,
+                    `"${cells[1].textContent}"`,
+                    cells[2].textContent,
+                    cells[3].textContent,
+                    cells[4].textContent,
+                    cells[5].textContent,
+                    `"${cells[6].textContent}"`,
+                    `"${cells[7].textContent}"`
+                ];
+                csvContent += rowData.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `prediction_results_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // File upload functionality (FIXED VERSION)
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadForm = document.getElementById('upload-form');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFile(files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+
+            fileList.innerHTML = '';
+            fileList.classList.remove('empty');
+
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showNativeAlert('Please select a CSV file only.', 'error');
+                return;
+            }
+
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">${(file.size / 1024).toFixed(1)} KB</span>
+                <div class="label-input">
+                    <input type="number" id="year-input" placeholder=" " required min="2020" max="2050">
+                    <label for="year-input">Year</label>
+                </div>
+                <button type="button" class="remove-btn" onclick="removeFile()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(fileItem);
+
+            // Create a new FileList-like object with the selected file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            // Enable submit button
+            submitBtn.disabled = false;
+
+            // Add event listener to year input
+            const yearInput = document.getElementById('year-input');
+            yearInput.addEventListener('input', function() {
+                document.getElementById('upload-year').value = this.value;
+                submitBtn.disabled = !this.value;
+            });
+        }
+
+        function removeFile() {
+            fileInput.value = '';
+            fileList.innerHTML = '';
+            fileList.classList.add('empty');
+            submitBtn.disabled = true;
+            document.getElementById('upload-year').value = '';
+        }
+    </script>
+
+    <!-- Calendar Script - Separated to avoid conflicts -->
+    <script>
+        // Calendar functionality (same as before)
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentDate = new Date();
+            let selectedWeek = null;
+            
+            const calendarDays = document.getElementById('calendar-days');
+            const currentMonthYear = document.getElementById('current-month-year');
+            const prevMonthBtn = document.getElementById('prev-month');
+            const nextMonthBtn = document.getElementById('next-month');
+            const selectedWeekDisplay = document.getElementById('selected-week-display');
+            const weekRangeText = document.getElementById('week-range-text');
+            const weekInput = document.getElementById('week');
+            const yearInput = document.getElementById('year');
+            const casesInput = document.getElementById('cases');
+            
+            renderCalendar(currentDate);
+            
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar(currentDate);
+            });
+            
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar(currentDate);
+            });
+            
+            function renderCalendar(date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                
+                currentMonthYear.textContent = date.toLocaleString('default', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                
+                calendarDays.innerHTML = '';
+                
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const firstDayIndex = firstDay.getDay();
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+                
+                for (let i = 0; i < 42; i++) {
+                    let day, displayMonth, displayYear, isOtherMonth;
+                    
+                    if (i < firstDayIndex) {
+                        day = prevMonthLastDay - firstDayIndex + i + 1;
+                        displayMonth = month - 1;
+                        displayYear = year;
+                        isOtherMonth = true;
+                    } else if (i >= firstDayIndex + lastDay.getDate()) {
+                        day = i - firstDayIndex - lastDay.getDate() + 1;
+                        displayMonth = month + 1;
+                        displayYear = year;
+                        isOtherMonth = true;
+                    } else {
+                        day = i - firstDayIndex + 1;
+                        displayMonth = month;
+                        displayYear = year;
+                        isOtherMonth = false;
+                    }
+                    
+                    const dayElement = createDayElement(day, displayMonth, displayYear, isOtherMonth);
+                    calendarDays.appendChild(dayElement);
+                }
+            }
+            
+            function createDayElement(day, month, year, isOtherMonth) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                if (isOtherMonth) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                const date = new Date(year, month, day);
+                const weekNumber = getWeekNumber(date);
+                
+                if (selectedWeek && 
+                    selectedWeek.week === weekNumber && 
+                    selectedWeek.year === date.getFullYear()) {
+                    dayElement.classList.add('current-week');
+                }
+                
+                dayElement.innerHTML = `
+                    <div class="day-number">${day}</div>
+                    <div class="week-number">W${weekNumber}</div>
+                `;
+                
+                dayElement.addEventListener('click', () => {
+                    selectWeek(date, weekNumber);
+                });
+                
+                return dayElement;
+            }
+            
+            function getWeekNumber(date) {
+                const target = new Date(date.valueOf());
+                const dayNr = (date.getDay() + 6) % 7;
+                target.setDate(target.getDate() - dayNr + 3);
+                
+                const firstThursday = new Date(target.getFullYear(), 0, 4);
+                const dayDiff = (target - firstThursday) / (24 * 60 * 60 * 1000);
+                
+                return 1 + Math.ceil(dayDiff / 7);
+            }
+            
+            function getWeekRange(week, year) {
+                const firstDayOfYear = new Date(year, 0, 1);
+                const daysToFirstMonday = firstDayOfYear.getDay() === 0 ? 1 : 8 - firstDayOfYear.getDay();
+                
+                const startOfWeek = new Date(year, 0, 1 + (week - 1) * 7 - firstDayOfYear.getDay() + daysToFirstMonday);
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                
+                return {
+                    start: startOfWeek,
+                    end: endOfWeek
+                };
+            }
+            
+            function selectWeek(date, weekNumber) {
+                const year = date.getFullYear();
+                const weekRange = getWeekRange(weekNumber, year);
+                
+                selectedWeek = {
+                    week: weekNumber,
+                    year: year,
+                    range: weekRange
+                };
+                
+                weekInput.value = weekNumber;
+                yearInput.value = year;
+                casesInput.value = '';
+                casesInput.focus();
+                
+                const startStr = weekRange.start.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                const endStr = weekRange.end.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                weekRangeText.textContent = `Week ${weekNumber}: ${startStr} - ${endStr}`;
+                selectedWeekDisplay.style.display = 'block';
+                renderCalendar(currentDate);
+                selectedWeekDisplay.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                showAlert(`Week ${weekNumber}, ${year} selected for reporting.`, 'success');
+            }
+        });
+    </script>
+    
+</body>
+</html>

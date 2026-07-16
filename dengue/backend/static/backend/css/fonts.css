@@ -1,0 +1,13 @@
+html {
+  scroll-behavior: smooth;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url(../fonts/inter.ttf);
+}
+
+@font-face {
+  font-family: "poppins";
+  src: url(../fonts/Poppins-Regular.ttf);
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Registration</title>
+  </head>
+  <body>
+    <h2>Admin Registration</h2>
+    {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <form method="post" action="{% url 'register' %}">
+      {% csrf_token %}
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email" required /><br /><br />
+      <label for="username">Username:</label>
+      <input type="text" name="username" id="username" required /><br /><br />
+      <label for="name">Full Name:</label>
+      <input type="text" name="name" id="name" required /><br /><br />
+      <label for="password">Password:</label>
+      <input
+        type="password"
+        name="password"
+        id="password"
+        required
+      /><br /><br />
+      <label for="confirm_password">Confirm Password:</label>
+      <input
+        type="password"
+        name="confirm_password"
+        id="confirm_password"
+        required
+      /><br /><br />
+      <input type="hidden" name="is_admin" value="true" />
+      <button type="submit">Register as Admin</button>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/static/backend/css/message.css" />
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <title>Message</title>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-btn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="title"><span>Me</span>ssages</div>
+      <div class="profile">
+        <i class="fa-solid fa-user" id="pf"></i>
+        <div class="profile-modal" id="profile-modal">
+          <div class="pf-img">
+            <img src="/static/backend/img/user-white.png" alt="" />
+          </div>
+          <h2>@{{ admin_user }}</h2>
+          <p>{{ admin_name }}</p>
+          <div style="width: 100%">
+            <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+            <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="{% url 'admin-panel' %}">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'dengue-case-table' %}">
+              <i class="fa-solid fa-head-side-mask"></i>
+              <span>Dengue Cases</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'report' %}">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'log-history' %}">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Log History</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'forecast' %}">
+              <i class="fa-solid fa-cloud-bolt"></i>
+              <span>Weather</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin-message' %}">
+              <i class="fa-solid fa-message"></i>
+              <span>Message</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'manage-user' %}">
+              <i class="fa-solid fa-users"></i>
+              <span>Manage Users</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="container">
+        <div class="section">
+          <h2 class="header"><i class="fa-solid fa-inbox"></i> Inbox</h2>
+          <div class="inbox">
+            {% for message in messages %}
+            <div
+              class="message-card"
+              data-message-id="{{ message.id }}"
+              data-sender="{{ message.sender }}"
+              data-recipient="{{ message.recipient }}"
+            >
+              <div class="msg-icon">
+                {% if message.sender == user_username or user_username in
+                message.sender %}
+                <i class="fa-solid fa-user-shield"></i>
+                {% else %}
+                <i class="fa-solid fa-user"></i>
+                {% endif %}
+              </div>
+              <div class="col">
+                <div class="message-header">
+                  <span class="sender">
+                    {% if message.sender == user_username or user_username in
+                    message.sender %} You {% else %} @{{ message.sender }} {%
+                    endif %}
+                  </span>
+                  {% if not message.is_read and message.sender != user_username
+                  and user_username not in message.sender %}
+                  <span class="unread-badge">New</span>
+                  {% endif %}
+                </div>
+                <div class="message-body">
+                  <h3 class="subject">{{ message.subject }}</h3>
+                  <p class="body-preview">
+                    {{ message.body|truncatewords:30 }}
+                  </p>
+                </div>
+              </div>
+              <div class="timestamp">
+                <span> {{ message.timestamp|date:"D d M. Y | h:i A" }} </span
+                ><br />
+                <span class="relative-time">
+                  {{ message.timestamp|timesince }} ago
+                </span>
+              </div>
+            </div>
+            {% endfor %} {% if messages|length == 0 %}
+            <p class="no-messages">No messages found.</p>
+            {% endif %}
+          </div>
+          <button class="compose" id="compose">Compose</button>
+        </div>
+      </div>
+    </main>
+
+    <div id="messageDetail" class="message-detail-popup">
+      <div class="message-detail-content">
+        <div class="message-detail-header">
+          <h2 id="detailSubject">Message Subject</h2>
+          <button class="close-detail" id="closeDetail">
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        <div class="message-detail-info">
+          <div class="detail-sender">
+            <strong id="fromToLabel">From:</strong>
+            <span id="detailSender">User</span>
+          </div>
+          <div class="detail-recipient">
+            <strong id="toFromLabel">To:</strong>
+            <span id="detailRecipient">Admin</span>
+          </div>
+          <div class="detail-time">
+            <strong>Date:</strong>
+            <span id="detailTime">Wed 08 Oct. 2025 | 01:30 PM</span>
+          </div>
+        </div>
+        <div class="message-detail-body">
+          <p id="detailBody">Message content will appear here...</p>
+        </div>
+        <div class="message-detail-actions">
+          <button class="reply-btn" id="replyBtn">
+            <i class="fa-solid fa-reply"></i> Reply
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="popover">
+      <div class="wrapper">
+        <h2>Send Message</h2>
+        <form method="post">
+          {% csrf_token %}
+          <div class="flex">
+            <div class="label-input">
+              <input
+                type="text"
+                name="subject"
+                id="subject"
+                placeholder=" "
+                required
+              />
+              <label for="subject">Subject</label>
+            </div>
+            <div class="label-input">
+              <select id="recipient" name="recipient" required>
+                {% for user in users %}
+                <option value="{{ user.username }}">
+                  {{ user.username }} ({{ user.name }})
+                </option>
+                {% endfor %}
+              </select>
+              <p class="label-select">User Receiver</p>
+            </div>
+          </div>
+          <div class="label-input">
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Type your message here..."
+              required
+            ></textarea>
+            <p class="label-select" style="top: 18px">Message:</p>
+          </div>
+
+          <div class="actionBtn">
+            <button type="submit">Send</button>
+            <button type="button" id="closeBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="userInfo" hidden>
+      <span id="user_barangay_name">{{ user_barangay }}</span>
+      <span id="user_username">{{ user_username }}</span>
+    </div>
+
+    <script src="/static/backend/js/menu.js"></script>
+    <script>
+      const addBtn = document.getElementById("compose");
+      const closeBtn = document.getElementById("closeBtn");
+      const popover = document.getElementById("popover");
+      const userUsername = document.getElementById("user_username").textContent;
+
+      addBtn.addEventListener("click", function () {
+        popover.classList.add("active");
+      });
+
+      closeBtn.addEventListener("click", function () {
+        popover.classList.remove("active");
+      });
+
+      const messageDetail = document.getElementById("messageDetail");
+      const closeDetail = document.getElementById("closeDetail");
+      const messageCards = document.querySelectorAll(".message-card");
+      const replyBtn = document.getElementById("replyBtn");
+
+      messageCards.forEach((card) => {
+        card.addEventListener("click", function () {
+          const messageId = this.getAttribute("data-message-id");
+          const sender = this.getAttribute("data-sender");
+          const recipient = this.getAttribute("data-recipient");
+
+          showMessageDetail(messageId, sender, recipient);
+
+          if (!sender.includes(userUsername) && sender !== "You") {
+            const unreadBadge = this.querySelector(".unread-badge");
+            if (unreadBadge) {
+              unreadBadge.remove();
+              markMessageAsRead(messageId);
+            }
+          }
+        });
+      });
+
+      function markMessageAsRead(messageId) {
+        const csrftoken = getCookie("csrftoken");
+
+        fetch(`/mark-message-read/${messageId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify({}),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status !== "success") {
+              console.error("Failed to mark message as read:", data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error marking message as read:", error);
+          });
+      }
+
+      closeDetail.addEventListener("click", function () {
+        messageDetail.classList.remove("active");
+      });
+
+      messageDetail.addEventListener("click", function (e) {
+        if (e.target === messageDetail) {
+          messageDetail.classList.remove("active");
+        }
+      });
+
+      function showMessageDetail(messageId, sender, recipient) {
+        const card = document.querySelector(`[data-message-id="${messageId}"]`);
+
+        if (card) {
+          const subject = card.querySelector(".subject").textContent;
+          const body = card.querySelector(".body-preview").textContent;
+          const time = card.querySelector(
+            ".timestamp span:first-child",
+          ).textContent;
+
+          const isSentMessage =
+            sender.includes(userUsername) || sender === "You";
+
+          if (isSentMessage) {
+            document.getElementById("fromToLabel").textContent = "From:";
+            document.getElementById("detailSender").textContent = "You";
+            document.getElementById("toFromLabel").textContent = "To:";
+            document.getElementById("detailRecipient").textContent = recipient;
+            replyBtn.style.display = "none";
+          } else {
+            document.getElementById("fromToLabel").textContent = "From:";
+            document.getElementById("detailSender").textContent = sender;
+            document.getElementById("toFromLabel").textContent = "To:";
+            document.getElementById("detailRecipient").textContent = "You";
+            replyBtn.style.display = "flex";
+          }
+
+          document.getElementById("detailSubject").textContent = subject;
+          document.getElementById("detailBody").textContent = body;
+          document.getElementById("detailTime").textContent = time;
+
+          messageDetail.classList.add("active");
+        }
+      }
+
+      replyBtn.addEventListener("click", function () {
+        const subject = document.getElementById("detailSubject").textContent;
+        const originalSender =
+          document.getElementById("detailSender").textContent;
+
+        document.getElementById("subject").value = `Re: ${subject}`;
+
+        if (originalSender !== "You") {
+          document.getElementById("recipient").value = originalSender;
+        }
+        document.getElementById("message").value =
+          `--- Original Message ---\n${document.getElementById("detailBody").textContent}\n\n`;
+
+        messageDetail.classList.remove("active");
+        popover.classList.add("active");
+
+        document.getElementById("message").focus();
+      });
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1),
+              );
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      messageCards.forEach((card) => {
+        card.addEventListener("click", function () {
+          messageCards.forEach((c) => c.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>

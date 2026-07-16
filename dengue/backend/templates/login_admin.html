@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Dengue Hotspot Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'backend/css/login.css' %}">
+</head>
+<body>
+    <div class="main_container">
+        <div class="login-container">
+            <h2>
+                ADMIN LOGIN
+                {% if messages %}
+                    {% for message in messages %}
+                        <span>{{ message }}</span>
+                    {% endfor %}
+                {% endif %}
+            </h2>
+            
+            <div class="login-form">
+                <form method="post" class="input_container">
+                    {% csrf_token %}
+                    <input type="text" id="username" name="username" placeholder="Username" required>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <div class="forgotpasswordcontainer">
+                        <a href="{% url 'forgot-password' %}">Forgot password?</a>
+                    </div>
+                    <div class="button_container">
+                        <button type="submit"><p>Login</p></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="welcome-container">
+            <h1><span>AI</span> DENGUE HOTSPOT PREDICTOR</h1>
+        </div>
+        <a href="{% url 'login' %}" class="as_Admin">Login as User</a>
+    </div>
+
+</body>
+</html>
+

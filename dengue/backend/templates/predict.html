@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dengue Risk Predictions</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background-color: #fff;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      tr:hover {
+        background-color: #f1f1f1;
+      }
+      .low {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .moderate {
+        color: #ffc107;
+        font-weight: bold;
+      }
+      .high {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+      .very-high {
+        color: #dc3545;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Dengue Risk Predictions</h1>
+
+    <form
+      method="post"
+      action="{% url 'run-prediction' %}"
+      style="text-align: center; margin-bottom: 12px"
+    >
+      {% csrf_token %}
+      <button type="submit">Run Prediction Now</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Barangay</th>
+          <th>Prediction Week</th>
+          <th>Risk Level</th>
+          <th>Confidence Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if predictions %} {% for prediction in predictions %}
+        <tr>
+          <td>{{ prediction.barangay.name }}</td>
+          <td>
+            Week {{ prediction.week_prediction }}, {{ prediction.year_prediction
+            }}
+          </td>
+          <td>
+            <span
+              class="{% if prediction.risk_level == 'Low' %}low{% elif prediction.risk_level == 'Moderate' %}moderate{% elif prediction.risk_level == 'High' %}high{% elif prediction.risk_level == 'Very High' %}very-high{% endif %}"
+            >
+              {{ prediction.risk_level }}
+            </span>
+          </td>
+          <td>{{ prediction.confidence_score }}%</td>
+        </tr>
+        {% endfor %} {% else %}
+        <tr>
+          <td colspan="4">
+            No predictions to display for latest week ({{ latest_week }} / {{
+            latest_year }}).
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </body>
+</html>

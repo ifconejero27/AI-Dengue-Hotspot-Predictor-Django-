@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>All Code Joker - Newsletter</title>
+</head>
+
+<body>
+    <section>
+        <div></div>
+        <div>
+            <div>
+                <div>
+                    <h1>Sign Up For My Newsletter!</h1>
+                    <p>By subscribing, you will get one email every month on tips, tutorials, and resources, to improve your skills as a developer. You'll also get early access to my courses and videos and also access to special bonus most of the time. No spam, unsubscribe at any time.</p>
+                </div>
+                <div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div>
+                            <div><input name="otp-type" required placeholder="Enter otp type"></div>
+                            <div><input name="email" required type="email" placeholder="Enter your email..."></div>
+                            <div><button type="submit">Sign up!</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

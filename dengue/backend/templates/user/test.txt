@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><link rel="stylesheet" href="../static/backend/css/pending_registration.css">
+    <link rel="stylesheet" href="../static/backend/css/fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Message</title>
+</head>
+<body>
+    <nav>
+        <div class="nav-btn">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="title">
+            <span>Me</span>ssages
+        </div>
+        <div class="profile">
+            <i class="fa-solid fa-user" id="pf"></i>
+            <div class="profile-modal" id="profile-modal">
+              <div class="pf-img">
+                <img src="/static/backend/img/user-white.png" alt="">
+              </div>
+              <h2>@{{ admin_user }}</h2>
+              <p>{{ admin_name }}</p>
+              <div style="width: 100%;">
+                <a href="#" class="pf-btn">Edit Profile</a>
+                <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+              </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="main-menu">
+            <ul>
+            <li>
+              <a href="{% url 'admin-panel' %}">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'dengue-case-table' %}">
+                <i class="fa-solid fa-head-side-mask"></i>
+                <span>Dengue Cases</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'report' %}">
+                <i class="fa-solid fa-file-export"></i>
+                <span>Report</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'log-history' %}">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>Log History</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'forecast' %}">
+                <i class="fa-solid fa-cloud-bolt"></i>
+                <span>Weather</span>
+              </a>
+            </li>
+            <li>
+                <a href="{% url 'admin-message' %}">
+                    <i class="fa-solid fa-message"></i>
+                    <span>Message</span>
+                </a>
+            </li>
+            <li>
+              <a href="{% url 'manage-user' %}">
+                <i class="fa-solid fa-users"></i>
+                <span>Manage Users</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+            <div class="section">
+                <div class="pending-users">
+                    <h2>Pending User Registrations</h2>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% for user in pending_users %}
+                        <div class="user-card">
+                            <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+                            <p><strong>Username:</strong> {{ user.username }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>Barangay:</strong> {{ user.barangay.name }}</p>
+                            <p><strong>Submitted:</strong> {{ user.created_at }}</p>
+                            
+                            <form method="post" action="{% url 'approve-registration' user.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="approve-btn">Approve</button>
+                            </form>
+                            
+                            <form method="post" action="{% url 'reject-registration' user.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="reject-btn">Reject</button>
+                            </form>
+                        </div>
+                    {% empty %}
+                        <p>No pending registrations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <div id="userInfo" hidden>
+      <span id="user_barangay_name">{{ user_barangay }}</span>
+      <span id="user_username">{{ user_username }}</span>
+    </div>
+
+    <script src="/static/backend/js/menu.js"></script>
+
+</body>
+</html>

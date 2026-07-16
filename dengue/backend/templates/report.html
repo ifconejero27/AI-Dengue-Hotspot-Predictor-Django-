@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../static/backend/css/report.css" />
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <title>Prediction Results Report</title>
+    <style>
+      .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+      }
+
+      .filter-group label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .filter-group select,
+      .filter-group input {
+        padding: 8px 12px;
+        border: 2px solid #e8eeff;
+        border-radius: 6px;
+        font-size: 14px;
+        background-color: #f8faff;
+        transition: all 0.3s ease;
+      }
+
+      .filter-group select:focus,
+      .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+      }
+
+      .filter-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .filter-btn.apply {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .filter-btn.reset {
+        background: #6c757d;
+        color: white;
+      }
+
+      .filter-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .search-box {
+        position: relative;
+        min-width: 250px;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 8px 35px 8px 12px;
+        border: 2px solid #e8eeff;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .search-box i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+      }
+
+      .results-count {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .export-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .export-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+      }
+
+      .sortable {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .sortable:hover {
+        background-color: #2c3b4a;
+      }
+
+      .sortable i {
+        margin-left: 5px;
+        opacity: 0.6;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        font-weight: 600;
+      }
+
+      .risk-low {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .risk-moderate {
+        color: #ffc107;
+        font-weight: bold;
+      }
+      .risk-high {
+        color: #fd7e14;
+        font-weight: bold;
+      }
+      .risk-very-high {
+        color: #dc3545;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-btn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="title"><span>Re</span>port</div>
+      <div class="profile">
+        <i class="fa-solid fa-user" id="pf"></i>
+        <div class="profile-modal" id="profile-modal">
+          <div class="pf-img">
+            <img src="/static/backend/img/user-white.png" alt="" />
+          </div>
+          <h2>@{{ admin_user }}</h2>
+          <p>{{ admin_name }}</p>
+          <div style="width: 100%">
+            <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+            <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="{% url 'admin-panel' %}">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'dengue-case-table' %}">
+              <i class="fa-solid fa-head-side-mask"></i>
+              <span>Dengue Cases</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'report' %}">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'log-history' %}">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Log History</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'forecast' %}">
+              <i class="fa-solid fa-cloud-bolt"></i>
+              <span>Weather</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'manage-user' %}">
+              <i class="fa-solid fa-users"></i>
+              <span>Manage Users</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="container">
+        <div class="filter-section">
+          <h3 style="margin-top: 0; margin-bottom: 15px">
+            Filter Prediction Results
+          </h3>
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="barangay-filter">Barangay</label>
+              <select id="barangay-filter">
+                <option value="">All Barangays</option>
+                <option value="Acacia">Acacia</option>
+                <option value="Baritan">Baritan</option>
+                <option value="Bayan-bayanan">Bayan-bayanan</option>
+                <option value="Catmon">Catmon</option>
+                <option value="Concepcion">Concepcion</option>
+                <option value="Dampalit">Dampalit</option>
+                <option value="Flores">Flores</option>
+                <option value="Hulong Duhat">Hulong Duhat</option>
+                <option value="Ibaba">Ibaba</option>
+                <option value="Longos">Longos</option>
+                <option value="Maysilo">Maysilo</option>
+                <option value="Muzon">Muzon</option>
+                <option value="Niugan">Niugan</option>
+                <option value="Panghulo">Panghulo</option>
+                <option value="Potrero">Potrero</option>
+                <option value="San Agustin">San Agustin</option>
+                <option value="Santolan">Santolan</option>
+                <option value="Tañong">Tañong</option>
+                <option value="Tinajeros">Tinajeros</option>
+                <option value="Tonsuya">Tonsuya</option>
+                <option value="Tugatog">Tugatog</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="year-filter">Year</label>
+              <select id="year-filter">
+                <option value="">All Years</option>
+                {% for year in unique_years %}
+                <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="week-filter">Week</label>
+              <select id="week-filter">
+                <option value="">All Weeks</option>
+                {% for week in week_range %}
+                <option value="{{ week }}">Week {{ week }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="risk-filter">Risk Level</label>
+              <select id="risk-filter">
+                <option value="">All Risk Levels</option>
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+                <option value="very high">Very High</option>
+              </select>
+            </div>
+
+            <div class="filter-actions">
+              <button class="filter-btn apply" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply Filters
+              </button>
+              <button class="filter-btn reset" onclick="resetFilters()">
+                <i class="fas fa-redo"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-controls">
+          <div class="results-count" id="results-count">
+            Showing {{ predictions.count }} predictions
+          </div>
+          <div class="search-box">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search predictions..."
+            />
+            <i class="fas fa-search"></i>
+          </div>
+          <button class="export-btn" onclick="exportToCSV()">
+            <i class="fas fa-download"></i> Export CSV
+          </button>
+        </div>
+
+        <div class="section">
+          <table id="predictions-table">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortTable(0)">
+                  Barangay <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(1)">
+                  Week Year <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(2)">
+                  Risk Level <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(3)">
+                  Numerical Risk <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(4)">
+                  Confidence Score <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(5)">
+                  Trend <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(6)">
+                  Created At <i class="fas fa-sort"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              {% for p in predictions %}
+              <tr
+                class="prediction-row"
+                data-barangay="{{ p.barangay.name }}"
+                data-year="{{ p.year_prediction }}"
+                data-week="{{ p.week_prediction }}"
+                data-risk="{{ p.risk_level|lower }}"
+                data-confidence="{{ p.confidence_score }}"
+                data-trend="{{ p.trend }}"
+                data-created="{{ p.created_at|date:'Y-m-d' }}"
+              >
+                <td>{{ p.barangay.name }}</td>
+                <td>Week {{ p.week_prediction }} - {{ p.year_prediction }}</td>
+                <td class="risk-{{ p.risk_level|lower|slugify }}">
+                  {{ p.risk_level }}
+                </td>
+                <td>{{ p.numerical_risk_level }}</td>
+                <td>{{ p.confidence_score }}</td>
+                <td>
+                  <center>
+                    {% if p.trend == 'up' %}
+                    <i class="fa-solid fa-arrow-up" style="color: green"></i>
+                    {% elif p.trend == 'down' %}
+                    <i class="fa-solid fa-arrow-down" style="color: red"></i>
+                    {% else %}
+                    <i class="fa-solid fa-minus" style="color: gray"></i>
+                    {% endif %}
+                  </center>
+                </td>
+                <td>{{ p.created_at|date:"Y-m-d" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" style="text-align: center">
+                  No prediction results found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <script src="../static/backend/js/menu.js"></script>
+
+    <script>
+      let currentSortColumn = -1;
+      let currentSortDirection = 1; // 1 for ascending, -1 for descending
+      let allPredictions = [];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        allPredictions = Array.from(
+          document.querySelectorAll(".prediction-row"),
+        ).map((row) => ({
+          element: row,
+          barangay: row.getAttribute("data-barangay"),
+          year: parseInt(row.getAttribute("data-year")),
+          week: parseInt(row.getAttribute("data-week")),
+          risk: row.getAttribute("data-risk"),
+          confidence: parseFloat(row.getAttribute("data-confidence")),
+          trend: row.getAttribute("data-trend"),
+          created: row.getAttribute("data-created"),
+        }));
+
+        document
+          .getElementById("search-input")
+          .addEventListener("input", function () {
+            applyFilters();
+          });
+      });
+
+      function applyFilters() {
+        const barangayFilter = document
+          .getElementById("barangay-filter")
+          .value.toLowerCase();
+        const yearFilter = document.getElementById("year-filter").value;
+        const weekFilter = document.getElementById("week-filter").value;
+        const riskFilter = document
+          .getElementById("risk-filter")
+          .value.toLowerCase();
+        const searchTerm = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+
+        let visibleCount = 0;
+
+        allPredictions.forEach((predictionData) => {
+          let showRow = true;
+
+          if (
+            barangayFilter &&
+            !predictionData.barangay.toLowerCase().includes(barangayFilter)
+          ) {
+            showRow = false;
+          }
+
+          if (yearFilter && predictionData.year !== parseInt(yearFilter)) {
+            showRow = false;
+          }
+
+          if (weekFilter && predictionData.week !== parseInt(weekFilter)) {
+            showRow = false;
+          }
+
+          if (riskFilter && predictionData.risk !== riskFilter) {
+            showRow = false;
+          }
+
+          if (searchTerm) {
+            const rowText = predictionData.element.textContent.toLowerCase();
+            if (!rowText.includes(searchTerm)) {
+              showRow = false;
+            }
+          }
+
+          predictionData.element.style.display = showRow ? "" : "none";
+          if (showRow) visibleCount++;
+        });
+
+        document.getElementById("results-count").textContent =
+          `Showing ${visibleCount} predictions`;
+      }
+
+      function resetFilters() {
+        document.getElementById("barangay-filter").value = "";
+        document.getElementById("year-filter").value = "";
+        document.getElementById("week-filter").value = "";
+        document.getElementById("risk-filter").value = "";
+        document.getElementById("search-input").value = "";
+
+        applyFilters();
+      }
+
+      function sortTable(columnIndex) {
+        const tbody = document.getElementById("table-body");
+        const rows = Array.from(
+          tbody.querySelectorAll(
+            '.prediction-row:not([style*="display: none"])',
+          ),
+        );
+
+        if (currentSortColumn === columnIndex) {
+          currentSortDirection *= -1;
+        } else {
+          currentSortColumn = columnIndex;
+          currentSortDirection = 1;
+        }
+
+        rows.sort((a, b) => {
+          let aValue, bValue;
+
+          switch (columnIndex) {
+            case 0:
+              aValue = a.getAttribute("data-barangay").toLowerCase();
+              bValue = b.getAttribute("data-barangay").toLowerCase();
+              break;
+            case 1:
+              const aYear = parseInt(a.getAttribute("data-year"));
+              const bYear = parseInt(b.getAttribute("data-year"));
+              const aWeek = parseInt(a.getAttribute("data-week"));
+              const bWeek = parseInt(b.getAttribute("data-week"));
+
+              if (aYear !== bYear) {
+                aValue = aYear;
+                bValue = bYear;
+              } else {
+                aValue = aWeek;
+                bValue = bWeek;
+              }
+              break;
+            case 2:
+              aValue = a.getAttribute("data-risk");
+              bValue = b.getAttribute("data-risk");
+
+              const riskOrder = {
+                "very high": 4,
+                high: 3,
+                moderate: 2,
+                low: 1,
+              };
+              aValue = riskOrder[aValue] || 0;
+              bValue = riskOrder[bValue] || 0;
+              break;
+            case 3:
+              aValue = parseFloat(a.cells[3].textContent);
+              bValue = parseFloat(b.cells[3].textContent);
+              break;
+            case 4:
+              aValue = parseFloat(a.getAttribute("data-confidence"));
+              bValue = parseFloat(b.getAttribute("data-confidence"));
+              break;
+            case 5:
+              aValue = a.getAttribute("data-trend");
+              bValue = b.getAttribute("data-trend");
+
+              const trendOrder = { up: 3, down: 2, stable: 1 };
+              aValue = trendOrder[aValue] || 0;
+              bValue = trendOrder[bValue] || 0;
+              break;
+            case 6:
+              aValue = new Date(a.getAttribute("data-created"));
+              bValue = new Date(b.getAttribute("data-created"));
+              break;
+            default:
+              aValue = a.cells[columnIndex].textContent;
+              bValue = b.cells[columnIndex].textContent;
+          }
+
+          if (aValue < bValue) return -1 * currentSortDirection;
+          if (aValue > bValue) return 1 * currentSortDirection;
+          return 0;
+        });
+
+        rows.forEach((row) => tbody.appendChild(row));
+
+        updateSortIndicators(columnIndex);
+      }
+
+      function updateSortIndicators(columnIndex) {
+        const headers = document.querySelectorAll(".sortable i");
+        headers.forEach((icon) => {
+          icon.className = "fas fa-sort";
+        });
+
+        const currentHeader =
+          document.querySelectorAll(".sortable")[columnIndex];
+        const icon = currentHeader.querySelector("i");
+        icon.className =
+          currentSortDirection === 1 ? "fas fa-sort-up" : "fas fa-sort-down";
+      }
+
+      function exportToCSV() {
+        const visibleRows = allPredictions.filter(
+          (predictionData) => predictionData.element.style.display !== "none",
+        );
+
+        if (visibleRows.length === 0) {
+          alert("No data to export!");
+          return;
+        }
+
+        let csvContent =
+          "Barangay,Week,Year,Risk Level,Numerical Risk,Confidence Score,Trend,Created At\n";
+
+        visibleRows.forEach((predictionData) => {
+          const row = predictionData.element;
+          const cells = row.querySelectorAll("td");
+          const rowData = [
+            `"${cells[0].textContent}"`,
+            predictionData.week,
+            predictionData.year,
+            `"${cells[2].textContent}"`,
+            cells[3].textContent,
+            cells[4].textContent,
+            `"${predictionData.trend}"`,
+            `"${predictionData.created}"`,
+          ];
+          csvContent += rowData.join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute("hidden", "");
+        a.setAttribute("href", url);
+        a.setAttribute(
+          "download",
+          `prediction_results_${new Date().toISOString().split("T")[0]}.csv`,
+        );
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    </script>
+  </body>
+</html>

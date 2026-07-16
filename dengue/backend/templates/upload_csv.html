@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Dengue Cases CSV</title>
+  </head>
+  <body>
+    <h1>Upload Dengue Cases CSV File</h1>
+
+    <div
+      style="
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+      "
+    >
+      <h3>CSV Format Requirements:</h3>
+      <ul>
+        <li>File must be in CSV format</li>
+        <li>Must contain columns: BARANGAY, Year, WEEK 1 to WEEK 52</li>
+        <li>
+          Only data for your barangay ({{ user_barangay }}) will be imported
+        </li>
+        <li>File size limit: 10MB</li>
+      </ul>
+    </div>
+
+    <form
+      id="upload-form"
+      action="{% url 'upload-csv-report' %}"
+      method="post"
+      enctype="multipart/form-data"
+      style="margin: 20px 0"
+    >
+      {% csrf_token %}
+
+      <div style="margin: 15px 0">
+        <label
+          for="file-input"
+          style="font-weight: bold; display: block; margin-bottom: 8px"
+        >
+          Select CSV File:
+        </label>
+        <input
+          type="file"
+          id="file-input"
+          name="file"
+          accept=".csv"
+          required
+          style="padding: 8px"
+        />
+      </div>
+
+      <div
+        id="file-info"
+        style="
+          margin: 15px 0;
+          padding: 10px;
+          background: #e9ecef;
+          border-radius: 4px;
+          display: none;
+        "
+      >
+        <strong>Selected File:</strong>
+        <span id="file-name"></span>
+        <span id="file-size"></span>
+      </div>
+
+      <button
+        type="submit"
+        id="submit-btn"
+        style="
+          padding: 10px 20px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Upload CSV File
+      </button>
+
+      <a
+        href="{% url 'user-report' %}"
+        style="
+          margin-left: 15px;
+          padding: 10px 20px;
+          background: #6c757d;
+          color: white;
+          text-decoration: none;
+          border-radius: 4px;
+          display: inline-block;
+        "
+      >
+        Back to Reports
+      </a>
+    </form>
+
+    <div id="message-container" style="margin: 20px 0"></div>
+
+    <script>
+      const fileInput = document.getElementById("file-input");
+      const fileInfo = document.getElementById("file-info");
+      const fileName = document.getElementById("file-name");
+      const fileSize = document.getElementById("file-size");
+      const submitBtn = document.getElementById("submit-btn");
+      const uploadForm = document.getElementById("upload-form");
+      const messageContainer = document.getElementById("message-container");
+
+      function showMessage(message, type = "info") {
+        const colors = {
+          success: "#28a745",
+          error: "#dc3545",
+          warning: "#ffc107",
+          info: "#17a2b8",
+        };
+
+        const messageDiv = document.createElement("div");
+        messageDiv.style.cssText = `
+                padding: 12px 15px;
+                margin: 10px 0;
+                border-radius: 4px;
+                background: ${colors[type] || colors.info};
+                color: white;
+                font-weight: bold;
+            `;
+        messageDiv.textContent = message;
+
+        messageContainer.innerHTML = "";
+        messageContainer.appendChild(messageDiv);
+
+        setTimeout(() => {
+          if (messageDiv.parentElement) {
+            messageDiv.remove();
+          }
+        }, 5000);
+      }
+
+      fileInput.addEventListener("change", function (e) {
+        if (this.files.length > 0) {
+          const file = this.files[0];
+
+          if (!file.name.toLowerCase().endsWith(".csv")) {
+            showMessage("Please select a CSV file only.", "error");
+            this.value = "";
+            return;
+          }
+
+          if (file.size > 10 * 1024 * 1024) {
+            showMessage("File is too large. Maximum size is 10MB.", "error");
+            this.value = "";
+            return;
+          }
+
+          fileName.textContent = file.name;
+          fileSize.textContent = ` (${(file.size / 1024).toFixed(1)} KB)`;
+          fileInfo.style.display = "block";
+
+          showMessage(
+            `File "${file.name}" selected and ready for upload.`,
+            "success",
+          );
+        }
+      });
+
+      uploadForm.addEventListener("submit", function (e) {
+        if (!fileInput.files.length) {
+          e.preventDefault();
+          showMessage("Please select a CSV file to upload.", "error");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "Uploading...";
+        submitBtn.style.background = "#6c757d";
+
+        showMessage("Uploading CSV file... Please wait.", "info");
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get("success")) {
+          showMessage(urlParams.get("success"), "success");
+        }
+        if (urlParams.get("error")) {
+          showMessage(urlParams.get("error"), "error");
+        }
+        if (urlParams.get("warning")) {
+          showMessage(urlParams.get("warning"), "warning");
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/backend/css/dengue_case.css">
+    <link rel="stylesheet" href="../static/backend/css/fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Dengue Cases</title>
+    <style>
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e8eeff;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #f8faff;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn.reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 35px 8px 12px;
+            border: 2px solid #e8eeff;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .results-count {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            background-color: #273645;
+        }
+
+        .sortable i {
+            margin-left: 5px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-btn">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+        <div class="title">
+            <span>De</span>ngue Cases
+        </div>
+        <div class="profile">
+            <i class="fa-solid fa-user" id="pf"></i>
+            <div class="profile-modal" id="profile-modal">
+              <div class="pf-img">
+                <img src="/static/backend/img/user-white.png" alt="">
+              </div>
+              <h2>@{{ user_username }}</h2>
+              <p>{{ user_name }}</p>
+              <div style="display: flex; margin-top: 10px;">
+                <span>Barangay:</span>
+                <span style="margin-left: 5px;">{{ user_barangay }}</span>
+              </div>
+              <div style="width: 100%;">
+                <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+                <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+              </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="main-menu">
+            <ul>
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                  <a href="{% url 'user-dengue-case-table' %}">
+                    <i class="fa-solid fa-head-side-mask"></i>
+                    <span>Dengue Cases</span>
+                  </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-report' %}">
+                        <i class="fa-solid fa-file-export"></i>
+                        <span>Report</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user-message' %}">
+                        <i class="fa-solid fa-message"></i>
+                        <span>Message</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'user_forecast' %}">
+                        <i class="fa-solid fa-cloud-bolt"></i>
+                        <span>Weather</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Filter Dengue Cases</h3>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="barangay-filter">Barangay</label>
+                        <select id="barangay-filter">
+                            <option value="">All Barangays</option>
+                            <option value="Acacia">Acacia</option>
+                            <option value="Baritan">Baritan</option>
+                            <option value="Bayan-bayanan">Bayan-bayanan</option>
+                            <option value="Catmon">Catmon</option>
+                            <option value="Concepcion">Concepcion</option>
+                            <option value="Dampalit">Dampalit</option>
+                            <option value="Flores">Flores</option>
+                            <option value="Hulong Duhat">Hulong Duhat</option>
+                            <option value="Ibaba">Ibaba</option>
+                            <option value="Longos">Longos</option>
+                            <option value="Maysilo">Maysilo</option>
+                            <option value="Muzon">Muzon</option>
+                            <option value="Niugan">Niugan</option>
+                            <option value="Panghulo">Panghulo</option>
+                            <option value="Potrero">Potrero</option>
+                            <option value="San Agustin">San Agustin</option>
+                            <option value="Santolan">Santolan</option>
+                            <option value="Tañong">Tañong</option>
+                            <option value="Tinajeros">Tinajeros</option>
+                            <option value="Tonsuya">Tonsuya</option>
+                            <option value="Tugatog">Tugatog</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="year-filter">Year</label>
+                        <select id="year-filter">
+                            <option value="">All Years</option>
+                            {% for year in unique_years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="week-filter">Week</label>
+                        <select id="week-filter">
+                            <option value="">All Weeks</option>
+                            {% for week in week_range %}
+                                <option value="{{ week }}">Week {{ week }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="cases-min">Min Cases</label>
+                        <input type="number" id="cases-min" placeholder="Minimum cases" min="0">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="cases-max">Max Cases</label>
+                        <input type="number" id="cases-max" placeholder="Maximum cases" min="0">
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="filter-btn apply" onclick="applyFilters()">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <button class="filter-btn reset" onclick="resetFilters()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-controls">
+                <div class="results-count" id="results-count">
+                    Showing {{ cases.count }} cases
+                </div> 
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search barangay">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button class="export-btn" onclick="exportToCSV()">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+            </div>
+
+
+            <div class="section">
+
+                <table class="dengue-cases-table" id="dengue-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortTable(0)">
+                                Barangay <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" onclick="sortTable(1)">
+                                Number of Cases <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" onclick="sortTable(2)">
+                                Week Reported <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" onclick="sortTable(3)">
+                                Year Reported <i class="fas fa-sort"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        {% for case in cases %}
+                        <tr class="case-row" 
+                            data-barangay="{{ case.barangay.name }}"
+                            data-year="{{ case.year_reported }}"
+                            data-week="{{ case.week_reported }}"
+                            data-cases="{{ case.num_cases }}">
+                            <td>{{ case.barangay.name }}</td>
+                            <td>{{ case.num_cases }}</td>
+                            <td>{{ case.week_reported }}</td>
+                            <td>{{ case.year_reported }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center;">No dengue cases found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+    </main>
+
+    <div id="userInfo" hidden>
+      <span id="user_barangay_name">{{ user_barangay }}</span>
+    </div>
+
+    <script src="/static/backend/js/menu.js"></script>
+
+    <script>
+        // Global variables
+        let currentSortColumn = -1;
+        let currentSortDirection = 1; // 1 for ascending, -1 for descending
+        let allCases = [];
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store all cases data
+            allCases = Array.from(document.querySelectorAll('.case-row')).map(row => ({
+                element: row,
+                barangay: row.getAttribute('data-barangay'),
+                year: parseInt(row.getAttribute('data-year')),
+                week: parseInt(row.getAttribute('data-week')),
+                cases: parseInt(row.getAttribute('data-cases'))
+            }));
+
+            // Initialize search
+            document.getElementById('search-input').addEventListener('input', function() {
+                applyFilters();
+            });
+        });
+
+        // Apply all filters
+        function applyFilters() {
+            const barangayFilter = document.getElementById('barangay-filter').value.toLowerCase();
+            const yearFilter = document.getElementById('year-filter').value;
+            const weekFilter = document.getElementById('week-filter').value;
+            const casesMin = document.getElementById('cases-min').value;
+            const casesMax = document.getElementById('cases-max').value;
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+            let visibleCount = 0;
+
+            allCases.forEach(caseData => {
+                let showRow = true;
+
+                // Barangay filter
+                if (barangayFilter && !caseData.barangay.toLowerCase().includes(barangayFilter)) {
+                    showRow = false;
+                }
+
+                // Year filter
+                if (yearFilter && caseData.year !== parseInt(yearFilter)) {
+                    showRow = false;
+                }
+
+                // Week filter
+                if (weekFilter && caseData.week !== parseInt(weekFilter)) {
+                    showRow = false;
+                }
+
+                // Cases range filter
+                if (casesMin && caseData.cases < parseInt(casesMin)) {
+                    showRow = false;
+                }
+                if (casesMax && caseData.cases > parseInt(casesMax)) {
+                    showRow = false;
+                }
+
+                // Search filter
+                if (searchTerm) {
+                    const rowText = caseData.element.textContent.toLowerCase();
+                    if (!rowText.includes(searchTerm)) {
+                        showRow = false;
+                    }
+                }
+
+                // Show/hide row
+                caseData.element.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            });
+
+            // Update results count
+            document.getElementById('results-count').textContent = `Showing ${visibleCount} cases`;
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('barangay-filter').value = '';
+            document.getElementById('year-filter').value = '';
+            document.getElementById('week-filter').value = '';
+            document.getElementById('cases-min').value = '';
+            document.getElementById('cases-max').value = '';
+            document.getElementById('search-input').value = '';
+
+            applyFilters();
+        }
+
+        // Sort table
+        function sortTable(columnIndex) {
+            const tbody = document.getElementById('table-body');
+            const rows = Array.from(tbody.querySelectorAll('.case-row:not([style*="display: none"])'));
+
+            // Toggle sort direction if clicking the same column
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection *= -1;
+            } else {
+                currentSortColumn = columnIndex;
+                currentSortDirection = 1;
+            }
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue, bValue;
+
+                switch(columnIndex) {
+                    case 0: // Barangay
+                        aValue = a.getAttribute('data-barangay').toLowerCase();
+                        bValue = b.getAttribute('data-barangay').toLowerCase();
+                        break;
+                    case 1: // Cases
+                        aValue = parseInt(a.getAttribute('data-cases'));
+                        bValue = parseInt(b.getAttribute('data-cases'));
+                        break;
+                    case 2: // Week
+                        aValue = parseInt(a.getAttribute('data-week'));
+                        bValue = parseInt(b.getAttribute('data-week'));
+                        break;
+                    case 3: // Year
+                        aValue = parseInt(a.getAttribute('data-year'));
+                        bValue = parseInt(b.getAttribute('data-year'));
+                        break;
+                    default:
+                        aValue = a.cells[columnIndex].textContent;
+                        bValue = b.cells[columnIndex].textContent;
+                }
+
+                if (aValue < bValue) return -1 * currentSortDirection;
+                if (aValue > bValue) return 1 * currentSortDirection;
+                return 0;
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sort indicators
+            updateSortIndicators(columnIndex);
+        }
+
+        // Update sort indicators
+        function updateSortIndicators(columnIndex) {
+            const headers = document.querySelectorAll('.sortable i');
+            headers.forEach(icon => {
+                icon.className = 'fas fa-sort';
+            });
+
+            const currentHeader = document.querySelectorAll('.sortable')[columnIndex];
+            const icon = currentHeader.querySelector('i');
+            icon.className = currentSortDirection === 1 ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const visibleRows = allCases.filter(caseData => 
+                caseData.element.style.display !== 'none'
+            );
+
+            if (visibleRows.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            let csvContent = 'Barangay,Number of Cases,Week Reported,Year Reported\n';
+            
+            visibleRows.forEach(caseData => {
+                const row = caseData.element;
+                const cells = row.querySelectorAll('td');
+                const rowData = [
+                    `"${cells[0].textContent}"`,
+                    cells[1].textContent,
+                    cells[2].textContent,
+                    cells[3].textContent
+                ];
+                csvContent += rowData.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `dengue_cases_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

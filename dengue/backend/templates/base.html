@@ -1,0 +1,302 @@
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<script>
+  class DjangoMessageHandler {
+    constructor() {
+      this.MESSAGE_TYPES = {
+        success: { icon: "✅", color: "#28a745", title: "Success" },
+        error: { icon: "❌", color: "#dc3545", title: "Error" },
+        warning: { icon: "⚠️", color: "#ffc107", title: "Warning" },
+        info: { icon: "ℹ️", color: "#17a2b8", title: "Information" },
+      };
+
+      this.PAGE_RULES = {
+        global: ["login", "logout", "profile", "welcome", "successfully"],
+
+        "user-report": [
+          "upload",
+          "csv",
+          "file",
+          "report",
+          "cases",
+          "dengue",
+          "import",
+          "export",
+          "manual",
+        ],
+        dashboard: ["prediction", "weather", "forecast", "risk", "update"],
+        "manage-user": ["user", "created", "updated", "deleted", "account"],
+        "admin-panel": ["system", "admin", "backup"],
+        "user-message": ["message", "sent", "received"],
+      };
+
+      this.init();
+    }
+
+    init() {
+      document.addEventListener("DOMContentLoaded", () => {
+        this.processMessages();
+      });
+    }
+
+    getCurrentPage() {
+      const path = window.location.pathname;
+      const url = path.toLowerCase();
+
+      if (url.includes("/report") || url.endsWith("/report/"))
+        return "user-report";
+      if (url.includes("/dashboard") || url.endsWith("/dashboard/"))
+        return "dashboard";
+      if (url.includes("/manage-user")) return "manage-user";
+      if (url.includes("/admin-panel")) return "admin-panel";
+      if (url.includes("/message")) return "user-message";
+      if (url.includes("/forecast")) return "forecast";
+      if (url.includes("/predict")) return "predict";
+
+      return "global";
+    }
+
+    shouldShowMessage(message, currentPage) {
+      const msgLower = message.toLowerCase();
+
+      const globalKeywords = this.PAGE_RULES.global;
+      if (globalKeywords.some((keyword) => msgLower.includes(keyword))) {
+        return true;
+      }
+
+      if (this.PAGE_RULES[currentPage]) {
+        return this.PAGE_RULES[currentPage].some((keyword) =>
+          msgLower.includes(keyword),
+        );
+      }
+
+      return true;
+    }
+
+    processMessages() {
+      const messageContainers = [
+        ".messages",
+        '[class*="alert"]',
+        '[class*="message"]',
+        ".alert",
+        ".message",
+      ];
+
+      let foundMessages = false;
+
+      messageContainers.forEach((selector) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          if (element.textContent && element.textContent.trim()) {
+            this.handleMessageElement(element);
+            foundMessages = true;
+          }
+        });
+      });
+
+      const djangoMessageSelectors = [
+        ".alert-success",
+        ".alert-error",
+        ".alert-warning",
+        ".alert-info",
+        ".alert-danger",
+        ".success",
+        ".error",
+        ".warning",
+        ".info",
+      ];
+
+      djangoMessageSelectors.forEach((selector) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          if (element.textContent && element.textContent.trim()) {
+            this.handleMessageElement(element);
+            foundMessages = true;
+          }
+        });
+      });
+
+      this.detectStandardDjangoMessages();
+
+      console.log(
+        "Message processing completed. Found messages:",
+        foundMessages,
+      );
+    }
+
+    detectStandardDjangoMessages() {
+      const possibleMessages = document.querySelectorAll("div, p, span, li");
+
+      possibleMessages.forEach((element) => {
+        const text = element.textContent.trim();
+        const html = element.innerHTML;
+
+        if (!text || text.length > 500) return;
+
+        if (this.isLikelyDjangoMessage(element, text, html)) {
+          this.handleMessageElement(element);
+        }
+      });
+    }
+
+    isLikelyDjangoMessage(element, text, html) {
+      const patterns = [
+        /successfully/i,
+        /error/i,
+        /warning/i,
+        /upload/i,
+        /created/i,
+        /updated/i,
+        /deleted/i,
+        /import/i,
+        /export/i,
+      ];
+
+      const hasMessagePattern = patterns.some((pattern) => pattern.test(text));
+
+      const classes = element.className.toLowerCase();
+      const hasMessageClass =
+        classes.includes("alert") ||
+        classes.includes("message") ||
+        classes.includes("success") ||
+        classes.includes("error") ||
+        classes.includes("warning") ||
+        classes.includes("info");
+
+      return hasMessagePattern || hasMessageClass;
+    }
+
+    handleMessageElement(element) {
+      const messageText = element.textContent.trim();
+      if (!messageText) return;
+
+      const currentPage = this.getCurrentPage();
+
+      if (!this.shouldShowMessage(messageText, currentPage)) {
+        console.log("Skipping message for page:", currentPage, messageText);
+        element.style.display = "none";
+        return;
+      }
+
+      const messageType = this.detectMessageType(element, messageText);
+
+      this.showPopup(messageText, messageType);
+
+      element.style.display = "none";
+
+      console.log("Displaying message:", {
+        text: messageText,
+        type: messageType,
+        page: currentPage,
+      });
+    }
+
+    detectMessageType(element, messageText) {
+      const text = messageText.toLowerCase();
+      const classes = element.className.toLowerCase();
+
+      if (
+        classes.includes("success") ||
+        classes.includes("alert-success") ||
+        text.includes("success")
+      ) {
+        return "success";
+      } else if (
+        classes.includes("error") ||
+        classes.includes("alert-error") ||
+        classes.includes("alert-danger") ||
+        text.includes("error")
+      ) {
+        return "error";
+      } else if (
+        classes.includes("warning") ||
+        classes.includes("alert-warning") ||
+        text.includes("warning")
+      ) {
+        return "warning";
+      } else if (
+        classes.includes("info") ||
+        classes.includes("alert-info") ||
+        text.includes("info")
+      ) {
+        return "info";
+      }
+
+      return "info";
+    }
+
+    showPopup(message, type = "info") {
+      const config = this.MESSAGE_TYPES[type] || this.MESSAGE_TYPES.info;
+
+      const popup = document.createElement("div");
+      popup.className = "django-message-popup";
+      popup.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 4px solid ${config.color};
+            max-width: 400px;
+            z-index: 10000;
+            animation: slideInRight 0.3s ease-out;
+            font-family: Arial, sans-serif;
+        `;
+
+      popup.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">${config.icon}</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: ${config.color}; margin-bottom: 4px;">
+                        ${config.title}
+                    </div>
+                    <div style="color: #333; font-size: 14px; line-height: 1.4;">
+                        ${message}
+                    </div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666;">
+                    ×
+                </button>
+            </div>
+        `;
+
+      document.body.appendChild(popup);
+
+      setTimeout(() => {
+        if (popup.parentElement) {
+          popup.remove();
+        }
+      }, 5000);
+    }
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .django-message-popup {
+        animation: slideInRight 0.3s ease-out;
+    }
+`;
+  document.head.appendChild(style);
+
+  const messageHandler = new DjangoMessageHandler();
+</script>

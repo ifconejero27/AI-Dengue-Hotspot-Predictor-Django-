@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      AI Dengue Hotspot Predictor - Secure and Actionable Insights for
+      Government
+    </title>
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link rel="stylesheet" href="../static/backend/css/home.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <script>
+      document.querySelectorAll("nav a").forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute("href").substring(1);
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: "smooth" });
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1><span style="color: red">AI</span> Dengue Hotspot Predictor</h1>
+      <nav>
+        <a href="#hero">Home</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#integration">Integration</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+        <a href="{% url 'login' %}" class="login">Login</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="hero">
+      <h2>Proactive Dengue Prediction for Government Health Officials</h2>
+      <p>
+        Harness AI to forecast outbreaks and protect communities with secure,
+        data-driven tools.
+      </p>
+      <div class="flex">
+        <button onclick="window.location.href = '#contact'">
+          Request a Demo
+        </button>
+        <button onclick="window.location.href = '#benefits'">
+          Explore Benefits
+        </button>
+      </div>
+    </section>
+
+    <section class="section" id="benefits">
+      <br /><br /><br /><br />
+      <h2>Key Benefits for Government Employees</h2>
+      <div class="benefits">
+        <div class="benefit-item">
+          <i class="fas fa-bell fa-2x" style="color: #007bff"></i>
+          <h3>Early Warning Alerts</h3>
+          <p>
+            Detect hotspots 2-4 weeks ahead for timely interventions and
+            resource deployment.
+          </p>
+        </div>
+        <div class="benefit-item">
+          <i class="fas fa-chart-line fa-2x" style="color: #28a745"></i>
+          <h3>Resource Optimization</h3>
+          <p>
+            Reduce costs by up to 30% with precise data analysis and budget
+            allocation.
+          </p>
+        </div>
+        <div class="benefit-item">
+          <i class="fas fa-shield-alt fa-2x" style="color: #ffc107"></i>
+          <h3>Enhanced Security</h3>
+          <p>
+            Fully compliant with data protection laws, ensuring secure handling
+            of sensitive information.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+      <br /><br /><br /><br />
+      <h2>How the AI Dengue Hotspot Predictor Works</h2>
+      <div class="how-it-works">
+        <div class="step-item">
+          <i class="fas fa-upload fa-2x" style="color: #007bff"></i>
+          <h3>Step 1: Data Input</h3>
+          <p>
+            Connect your sources like weather and health data for seamless
+            integration.
+          </p>
+        </div>
+        <div class="step-item">
+          <i class="fas fa-cogs fa-2x" style="color: #28a745"></i>
+          <h3>Step 2: AI Analysis</h3>
+          <p>Our models process data in real-time for accurate predictions.</p>
+        </div>
+        <div class="step-item">
+          <i class="fas fa-map-marked-alt fa-2x" style="color: #ffc107"></i>
+          <h3>Step 3: Insights Delivery</h3>
+          <p>Access interactive maps and reports for immediate action.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="integration">
+      <br /><br /><br /><br />
+      <h2>Seamless Integration and Security</h2>
+      <p>
+        Our tool integrates with government systems like GIS and health
+        databases. Features include encrypted data storage, user authentication,
+        and compliance with standards such as HIPAA or GDPR equivalents,
+        ensuring your operations remain secure and efficient.
+      </p>
+    </section>
+
+    <section class="section" id="faq">
+      <br /><br /><br /><br />
+      <h2>Frequently Asked Questions</h2>
+      <div style="color: white">
+        <h3>What is the AI Dengue Hotspot Predictor?</h3>
+        <p>
+          • It is an advanced AI tool designed to forecast potential dengue
+          outbreak areas by analyzing data such as weather patterns, population
+          density, and historical health records, helping government employees
+          make proactive decisions for public health.
+        </p>
+        <h3>What are the main benefits for government health departments?</h3>
+        <p>
+          • It offers early warning alerts, resource optimization for mosquito
+          control, and data-driven insights that can help reduce outbreak
+          impacts and improve community health outcomes.
+        </p>
+        <h3>Are there any limitations to the AI's predictions?</h3>
+        <p>
+          • Predictions are based on available data and may vary in accuracy
+          depending on data quality; we recommend cross-referencing with local
+          health guidelines for the best results.
+        </p>
+      </div>
+    </section>
+
+    <section class="cta" id="contact">
+      <h2>Take the Next Step in Dengue Prevention</h2>
+      <p>Schedule a demo or discuss how we can support your team's needs.</p>
+      <button
+        onclick="window.location.href = 'mailto:contact@denguepredictor.ai'"
+      >
+        Email Us
+      </button>
+      <button onclick="window.location.href = 'https://forms.gle/example'">
+        Request a Demo
+      </button>
+    </section>
+
+    <footer>
+      <p>&copy; 2023 AI Dengue Hotspot Predictor. All rights reserved.</p>
+      <p>Contact: contact@denguepredictor.ai | Phone: (123) 456-7890</p>
+      <p>
+        Disclaimer: For informational use only. Consult official guidelines for
+        actions.
+      </p>
+    </footer>
+  </body>
+</html>

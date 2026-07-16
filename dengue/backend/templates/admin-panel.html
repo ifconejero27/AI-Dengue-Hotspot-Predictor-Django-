@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link rel="stylesheet" href="../static/backend/css/admin-panel.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Admin Panel - AI Dengue Hotspot Predictor</title>
+    <style>
+      .barangay-row {
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+      }
+
+      .barangay-row:hover {
+        background-color: #f8f9fa !important;
+      }
+
+      .barangay-row.selected {
+        background-color: #e3f2fd !important;
+        font-weight: bold;
+      }
+
+      .prediction-table table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .prediction-table th {
+        background-color: #f1f3f4;
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .prediction-table td {
+        padding: 10px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .prediction-tabs {
+        display: flex;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .tab-button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+
+      .tab-button.active {
+        border-bottom-color: #667eea;
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .prediction-table {
+        display: none;
+      }
+
+      .prediction-table.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-btn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="title"><span>AI</span> Dengue Hotspot Predictor</div>
+      <div class="profile">
+        <i class="fa-solid fa-user" id="pf"></i>
+        <div class="profile-modal" id="profile-modal">
+          <div class="pf-img">
+            <img src="/static/backend/img/user-white.png" alt="" />
+          </div>
+          <h2>@{{ admin_user }}</h2>
+          <p>{{ admin_name }}</p>
+          <div style="width: 100%">
+            <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+            <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="{% url 'admin-panel' %}">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'dengue-case-table' %}">
+              <i class="fa-solid fa-head-side-mask"></i>
+              <span>Dengue Cases</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'report' %}">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'log-history' %}">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Log History</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'forecast' %}">
+              <i class="fa-solid fa-cloud-bolt"></i>
+              <span>Weather</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin-message' %}">
+              <i class="fa-solid fa-message"></i>
+              <span>Message</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'manage-user' %}">
+              <i class="fa-solid fa-users"></i>
+              <span>Manage Users</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Main Content -->
+      <div class="left-container">
+        <div class="weather left-shadow" id="weather">
+          <div class="loctemp-wrapper">
+            <div class="location">{{ weather.location }}</div>
+            <div class="temperature">
+              {{ weather.temperature }}°C
+              <img src="../static/backend/img/icon-temperature.png" alt="" />
+            </div>
+          </div>
+          <div class="rainhumi-wrapper">
+            <div class="rainfall-chance">
+              <p>Rainfall Chance</p>
+              <img src="../static/backend/img/icon-rain.png" alt="" />
+              {{ weather.rainfall_chance }}%
+            </div>
+            <div class="humidity">
+              <p>Humidity</p>
+              <img src="../static/backend/img/icon-humidity.png" alt="" />
+              {{ weather.humidity }}%
+            </div>
+          </div>
+        </div>
+        <div class="datetime left-shadow" id="datetime"></div>
+        <div class="legend left-shadow" id="legend">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+      <div class="center-container">
+        <div class="map" id="map"></div>
+      </div>
+      <div class="right-container">
+        <div class="chart right-shadow" id="chart">
+          <!-- Prediction Week Tabs -->
+          <div class="prediction-tabs">
+            <button class="tab-button active" data-week="current">
+              Current Week
+            </button>
+            <button class="tab-button" data-week="next">Next Week</button>
+            <button class="tab-button" data-week="next_next">
+              Next Next Week
+            </button>
+          </div>
+
+          <!-- Current Week Prediction Table -->
+          <div class="prediction-table active" id="current-week-table">
+            <table id="barangayTable">
+              <tr>
+                <th>Barangay</th>
+                <th>Risk Level</th>
+                <th>Score</th>
+                <th>Trend</th>
+              </tr>
+              {% for result in prediction_result %}
+              <tr
+                class="barangay-row"
+                data-barangay="{{ result.barangay.name }}"
+                data-lat="{{ result.barangay.latitude }}"
+                data-long="{{ result.barangay.longitude }}"
+                data-risk="{{ result.risk_level|lower }}"
+                data-score="{{ result.confidence_score }}"
+              >
+                <td>{{ result.barangay.name }}</td>
+                <td>{{ result.risk_level|lower }}</td>
+                <td>{{ result.confidence_score }}</td>
+                <td>
+                  <center>
+                    {% if result.trend == 'up' %}
+                    <i class="fa-solid fa-arrow-up" style="color: green"></i>
+                    {% elif result.trend == 'down' %}
+                    <i class="fa-solid fa-arrow-down" style="color: red"></i>
+                    {% else %}
+                    <i class="fa-solid fa-minus" style="color: gray"></i>
+                    {% endif %}
+                  </center>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" style="text-align: center">
+                  No predictions available for current week.
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+
+          <!-- Next Week Prediction Table -->
+          <div class="prediction-table" id="next-week-table">
+            <table id="barangayTableNext">
+              <tr>
+                <th>Barangay</th>
+                <th>Risk Level</th>
+                <th>Score</th>
+                <th>Trend</th>
+              </tr>
+              {% for result in next_week_predictions %}
+              <tr
+                class="barangay-row"
+                data-barangay="{{ result.barangay.name }}"
+                data-lat="{{ result.barangay.latitude }}"
+                data-long="{{ result.barangay.longitude }}"
+                data-risk="{{ result.risk_level|lower }}"
+                data-score="{{ result.confidence_score }}"
+              >
+                <td>{{ result.barangay.name }}</td>
+                <td>{{ result.risk_level|lower }}</td>
+                <td>{{ result.confidence_score }}</td>
+                <td>
+                  <center>
+                    {% if result.trend == 'up' %}
+                    <i class="fa-solid fa-arrow-up" style="color: green"></i>
+                    {% elif result.trend == 'down' %}
+                    <i class="fa-solid fa-arrow-down" style="color: red"></i>
+                    {% else %}
+                    <i class="fa-solid fa-minus" style="color: gray"></i>
+                    {% endif %}
+                  </center>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" style="text-align: center">
+                  No predictions available for next week.
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+
+          <!-- Next Next Week Prediction Table -->
+          <div class="prediction-table" id="next_next-week-table">
+            <table id="barangayTableNextNext">
+              <tr>
+                <th>Barangay</th>
+                <th>Risk Level</th>
+                <th>Score</th>
+                <th>Trend</th>
+              </tr>
+              {% for result in next_next_week_predictions %}
+              <tr
+                class="barangay-row"
+                data-barangay="{{ result.barangay.name }}"
+                data-lat="{{ result.barangay.latitude }}"
+                data-long="{{ result.barangay.longitude }}"
+                data-risk="{{ result.risk_level|lower }}"
+                data-score="{{ result.confidence_score }}"
+              >
+                <td>{{ result.barangay.name }}</td>
+                <td>{{ result.risk_level|lower }}</td>
+                <td>{{ result.confidence_score }}</td>
+                <td>
+                  <center>
+                    {% if result.trend == 'up' %}
+                    <i class="fa-solid fa-arrow-up" style="color: green"></i>
+                    {% elif result.trend == 'down' %}
+                    <i class="fa-solid fa-arrow-down" style="color: red"></i>
+                    {% else %}
+                    <i class="fa-solid fa-minus" style="color: gray"></i>
+                    {% endif %}
+                  </center>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" style="text-align: center">
+                  No predictions available for next next week.
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <input
+      type="checkbox"
+      id="is_admin"
+      value="{{ is_admin }}"
+      checked
+      disabled
+      hidden
+    />
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <script src="/static/backend/js/notification.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../static/backend/js/map.js"></script>
+    <script src="../static/backend/js/datetime.js"></script>
+    <script src="../static/backend/js/menu.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeTabs();
+
+        setTimeout(initializeTableInteractivity, 1000);
+
+        initializeChart();
+      });
+
+      function initializeTabs() {
+        const tabButtons = document.querySelectorAll(".tab-button");
+        const predictionTables = document.querySelectorAll(".prediction-table");
+
+        tabButtons.forEach((button) => {
+          button.addEventListener("click", function () {
+            const targetWeek = this.getAttribute("data-week");
+
+            tabButtons.forEach((btn) => btn.classList.remove("active"));
+            predictionTables.forEach((table) =>
+              table.classList.remove("active"),
+            );
+
+            this.classList.add("active");
+
+            const targetTable = document.getElementById(
+              `${targetWeek}-week-table`,
+            );
+            if (targetTable) {
+              targetTable.classList.add("active");
+            }
+
+            setTimeout(initializeTableInteractivity, 100);
+          });
+        });
+      }
+
+      function initializeTableInteractivity() {
+        const barangayRows = document.querySelectorAll(".barangay-row");
+
+        barangayRows.forEach((row) => {
+          row.replaceWith(row.cloneNode(true));
+        });
+
+        const newBarangayRows = document.querySelectorAll(".barangay-row");
+
+        newBarangayRows.forEach((row) => {
+          row.addEventListener("mouseenter", function () {
+            this.style.backgroundColor = "#f8f9fa";
+            const barangayName = this.getAttribute("data-barangay");
+            highlightBarangayOnMap(barangayName);
+          });
+
+          row.addEventListener("mouseleave", function () {
+            if (!this.classList.contains("selected")) {
+              this.style.backgroundColor = "";
+            }
+            const barangayName = this.getAttribute("data-barangay");
+            unhighlightBarangayOnMap(barangayName);
+          });
+
+          row.addEventListener("click", function () {
+            newBarangayRows.forEach((r) => {
+              r.classList.remove("selected");
+              r.style.backgroundColor = "";
+            });
+
+            this.classList.add("selected");
+            this.style.backgroundColor = "#e3f2fd";
+
+            const barangayName = this.getAttribute("data-barangay");
+            const lat = parseFloat(this.getAttribute("data-lat"));
+            const long = parseFloat(this.getAttribute("data-long"));
+            const riskLevel = this.getAttribute("data-risk");
+            const score = this.getAttribute("data-score");
+
+            zoomToBarangay(barangayName, lat, long, riskLevel, score);
+          });
+        });
+      }
+
+      function zoomToBarangay(barangayName, lat, long, riskLevel, score) {
+        if (typeof map === "undefined") {
+          console.error("Map not found. Make sure Leaflet map is initialized.");
+          return;
+        }
+
+        function norm(s) {
+          return (s || "").toString().toLowerCase().normalize
+            ? s
+                .toString()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+            : s.toString().toLowerCase();
+        }
+
+        const normalizedName = norm(barangayName);
+        let foundLayer = null;
+
+        map.eachLayer(function (layer) {
+          if (layer.feature && layer.feature.properties) {
+            const layerName = norm(layer.feature.properties.adm4_en || "");
+            if (layerName === normalizedName) {
+              foundLayer = layer;
+            }
+          }
+        });
+
+        if (foundLayer) {
+          const bounds = foundLayer.getBounds();
+          if (bounds && bounds.isValid()) {
+            map.fitBounds(bounds, {
+              padding: [20, 20],
+              maxZoom: 15,
+            });
+          } else {
+            map.setView([lat, long], 15);
+          }
+
+          foundLayer.openPopup();
+          highlightBarangayOnMap(barangayName);
+        } else {
+          map.setView([lat, long], 15);
+        }
+      }
+
+      function highlightBarangayOnMap(barangayName) {
+        if (typeof map === "undefined") return;
+
+        function norm(s) {
+          return (s || "").toString().toLowerCase().normalize
+            ? s
+                .toString()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+            : s.toString().toLowerCase();
+        }
+
+        const normalizedName = norm(barangayName);
+
+        map.eachLayer(function (layer) {
+          if (layer.feature && layer.feature.properties) {
+            const layerName = norm(layer.feature.properties.adm4_en || "");
+            if (layerName === normalizedName) {
+              layer.setStyle({
+                weight: 4,
+                color: "#ffeb3b",
+                fillOpacity: 0.8,
+              });
+              layer.bringToFront();
+            }
+          }
+        });
+      }
+
+      function unhighlightBarangayOnMap(barangayName) {
+        if (typeof map === "undefined") return;
+
+        function norm(s) {
+          return (s || "").toString().toLowerCase().normalize
+            ? s
+                .toString()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+            : s.toString().toLowerCase();
+        }
+
+        const normalizedName = norm(barangayName);
+
+        map.eachLayer(function (layer) {
+          if (layer.feature && layer.feature.properties) {
+            const layerName = norm(layer.feature.properties.adm4_en || "");
+            if (layerName === normalizedName && layer.resetStyle) {
+              layer.resetStyle();
+            }
+          }
+        });
+      }
+
+      function initializeChart() {
+        const chartEl = document.getElementById("myChart");
+        if (chartEl) {
+          const ctx = chartEl.getContext("2d");
+          new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["Low", "Moderate", "High", "Very High"],
+              datasets: [
+                {
+                  label: "Risk Level",
+                  data: [3, 6, 9, 12],
+                  backgroundColor: ["#28a745", "#ffcc00", "#ff9933", "#ff3333"],
+                  borderRadius: 6,
+                  barThickness: 50,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: {
+                  ticks: { color: "#2c3e50" },
+                  grid: { display: false },
+                },
+                y: {
+                  ticks: { color: "#2c3e50" },
+                  grid: { color: "rgba(44,62,80,0.10)" },
+                  beginAtZero: true,
+                  max: 12,
+                },
+              },
+            },
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

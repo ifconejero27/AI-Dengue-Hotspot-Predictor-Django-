@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link rel="stylesheet" href="../static/backend/css/manage-user.css" />
+    <title>Manage User</title>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-btn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="title"><span>Manage</span> User</div>
+      <div class="profile">
+        <i class="fa-solid fa-user" id="pf"></i>
+        <div class="profile-modal" id="profile-modal">
+          <div class="pf-img">
+            <img src="/static/backend/img/user-white.png" alt="" />
+          </div>
+          <h2>@{{ admin_user }}</h2>
+          <p>{{ admin_name }}</p>
+          <div style="width: 100%">
+            <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+            <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="{% url 'admin-panel' %}">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'dengue-case-table' %}">
+              <i class="fa-solid fa-head-side-mask"></i>
+              <span>Dengue Cases</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'report' %}">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'log-history' %}">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Log History</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'forecast' %}">
+              <i class="fa-solid fa-cloud-bolt"></i>
+              <span>Weather</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin-message' %}">
+              <i class="fa-solid fa-message"></i>
+              <span>Message</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'manage-user' %}">
+              <i class="fa-solid fa-users"></i>
+              <span>Manage Users</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="container">
+        <div class="section">
+          <div class="header">
+            <h2>List of registered admin</h2>
+            <div class="">
+              <button id="addBtn">
+                <i class="fa-solid fa-user-plus"></i>
+                Add user
+              </button>
+            </div>
+          </div>
+          <table>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Username</th>
+              <th>Actions</th>
+            </tr>
+            {% for user in users %} {% if user.is_admin %}
+            <tr>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <center>
+                  <!-- <a href="{% url 'edit-user' user.pk %}"><i class="fa-solid fa-pen-to-square"></i></a> -->
+                  <a
+                    href="{% url 'delete-user' user.pk %}"
+                    onclick="return confirm('Delete user?');"
+                    ><i class="fa-solid fa-trash-can"></i
+                  ></a>
+                </center>
+              </td>
+            </tr>
+            {% endif %} {% endfor %}
+          </table>
+
+          <div class="header">
+            <h2>List of registered user</h2>
+          </div>
+          <table id="userTable">
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Username</th>
+              <th>Barangay</th>
+              <th>Actions</th>
+            </tr>
+            {% for user in users %} {% if not user.is_admin %}
+            <tr>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                {% for user_data in user_datas %} {% if user_data.username ==
+                user.username %} {% for barangay in barangays %} {% if
+                user_data.barangay.pk == barangay.pk %} {{ barangay.name }} {%
+                endif %} {% endfor %} {% endif %} {% endfor %}
+              </td>
+              <td>
+                <center>
+                  <a href="{% url 'edit-user' user.pk %}"
+                    ><i class="fa-solid fa-pen-to-square"></i
+                  ></a>
+                  <a
+                    href="{% url 'delete-user' user.pk %}"
+                    onclick="return confirm('Delete user?');"
+                    ><i class="fa-solid fa-trash-can"></i
+                  ></a>
+                </center>
+              </td>
+            </tr>
+            {% endif %} {% endfor %}
+          </table>
+        </div>
+      </div>
+    </main>
+    <div id="popover">
+      <div class="wrapper">
+        <h2>Create User</h2>
+        <form method="post" action="{% url 'register' %}">
+          {% csrf_token %}
+          <div class="flex">
+            <div class="label-input">
+              <input
+                type="text"
+                name="name"
+                id="name"
+                placeholder=" "
+                required
+              />
+              <label for="name">Full Name</label>
+            </div>
+            <div class="label-input">
+              <input
+                type="text"
+                name="username"
+                id="username"
+                placeholder=" "
+                required
+              />
+              <label for="username">Username</label>
+            </div>
+          </div>
+          <div class="label-input">
+            <input
+              type="email"
+              name="email"
+              id="email"
+              placeholder=" "
+              required
+            />
+            <label for="email">Email</label>
+          </div>
+          <div class="label-input">
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder=" "
+              required
+            />
+            <label for="password">Password</label>
+          </div>
+          <div class="flex">
+            <div class="label-input">
+              <select name="barangay" id="barangay" required>
+                {% for barangay in barangays %}
+                <option value="{{ barangay.pk }}">{{ barangay.name }}</option>
+                {% endfor %}
+              </select>
+              <p class="label-select">Barangay</p>
+            </div>
+            <div class="label-input">
+              <select name="is_admin" id="is_admin">
+                <option value="false" selected>Default</option>
+                <option value="true">Admin</option>
+              </select>
+              <p class="label-select">Privilege</p>
+            </div>
+          </div>
+          <div class="actionBtn">
+            <button type="submit">Create</button>
+            <button type="button" id="closeBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <script src="/static/backend/js/notification.js"></script>
+
+    <script src="../static/backend/js/menu.js"></script>
+    <script src="../static/backend/js/manage-user.js"></script>
+  </body>
+</html>

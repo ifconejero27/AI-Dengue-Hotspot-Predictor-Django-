@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="../static/backend/css/fonts.css" />
+    <link rel="stylesheet" href="../static/backend/css/log-history.css" />
+    <title>Document</title>
+    <style>
+      .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+      }
+
+      .filter-group label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .filter-group select,
+      .filter-group input {
+        padding: 8px 12px;
+        border: 2px solid #e8eeff;
+        border-radius: 6px;
+        font-size: 14px;
+        background-color: #f8faff;
+        transition: all 0.3s ease;
+      }
+
+      .filter-group select:focus,
+      .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+      }
+
+      .filter-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .filter-btn.apply {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .filter-btn.reset {
+        background: #6c757d;
+        color: white;
+      }
+
+      .filter-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .search-box {
+        position: relative;
+        min-width: 250px;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 8px 35px 8px 12px;
+        border: 2px solid #e8eeff;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .search-box i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+      }
+
+      .results-count {
+        color: #6c757d;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .export-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .export-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+      }
+
+      .sortable {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .sortable:hover {
+        background-color: #273645;
+      }
+
+      .sortable i {
+        margin-left: 5px;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-btn">
+        <i class="fa-solid fa-bars"></i>
+      </div>
+      <div class="title"><span>HISTORY</span> LOGS</div>
+      <div class="profile">
+        <i class="fa-solid fa-user" id="pf"></i>
+        <div class="profile-modal" id="profile-modal">
+          <div class="pf-img">
+            <img src="/static/backend/img/user-white.png" alt="" />
+          </div>
+          <h2>@{{ admin_user }}</h2>
+          <p>{{ admin_name }}</p>
+          <div style="width: 100%">
+            <a href="{% url 'edit-profile' %}" class="pf-btn">Edit Profile</a>
+            <a href="{% url 'logout' %}" class="pf-btn">Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="{% url 'admin-panel' %}">
+              <i class="fa-solid fa-house"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'dengue-case-table' %}">
+              <i class="fa-solid fa-head-side-mask"></i>
+              <span>Dengue Cases</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'report' %}">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'log-history' %}">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>Log History</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'forecast' %}">
+              <i class="fa-solid fa-cloud-bolt"></i>
+              <span>Weather</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin-message' %}">
+              <i class="fa-solid fa-message"></i>
+              <span>Message</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'manage-user' %}">
+              <i class="fa-solid fa-users"></i>
+              <span>Manage Users</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Main Content -->
+      <div class="container">
+        <!-- Filter Section -->
+        <div class="filter-section">
+          <h3 style="margin-top: 0; margin-bottom: 15px">Filter Log History</h3>
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="user-filter">User</label>
+              <input
+                type="text"
+                id="user-filter"
+                placeholder="Filter by username"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="action-filter">Action</label>
+              <select id="action-filter">
+                <option value="">All Actions</option>
+                <option value="LOGIN">Account Login</option>
+                <option value="REGISTER">Account Registration</option>
+                <option value="MODIFY">Account Modification</option>
+                <option value="DELETE">Account Deletion</option>
+                <option value="PREDICTION">Prediction Made</option>
+                <option value="DATA_ENTRY">Data Entry</option>
+                <option value="SYSTEM">System Event</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="date-from">Date From</label>
+              <input type="date" id="date-from" />
+            </div>
+
+            <div class="filter-group">
+              <label for="date-to">Date To</label>
+              <input type="date" id="date-to" />
+            </div>
+
+            <div class="filter-actions">
+              <button class="filter-btn apply" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply Filters
+              </button>
+              <button class="filter-btn reset" onclick="resetFilters()">
+                <i class="fas fa-redo"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-controls">
+          <div class="results-count" id="results-count">
+            Showing {{ logs.count }} log entries
+          </div>
+          <div class="search-box">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search in descriptions"
+            />
+            <i class="fas fa-search"></i>
+          </div>
+          <button class="export-btn" onclick="exportToCSV()">
+            <i class="fas fa-download"></i> Export CSV
+          </button>
+        </div>
+
+        <div class="section">
+          <table class="log-history-table" id="log-table">
+            <thead>
+              <tr>
+                <th class="sortable" onclick="sortTable(0)">
+                  ID <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(1)">
+                  User <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(2)">
+                  Action <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(3)">
+                  Description <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" onclick="sortTable(4)">
+                  Timestamp <i class="fas fa-sort"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              {% for log in logs %}
+              <tr
+                class="log-row"
+                data-id="{{ log.log_id }}"
+                data-user="{{ log.user }}"
+                data-action="{{ log.log_title }}"
+                data-description="{{ log.description }}"
+                data-timestamp="{{ log.timestamp|date:'Y-m-d H:i:s' }}"
+              >
+                <td>{{ log.log_id }}</td>
+                <td>{{ log.user }}</td>
+                <td>{{ log.log_title }}</td>
+                <td>{{ log.description }}</td>
+                <td>{{ log.timestamp }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" style="text-align: center">
+                  No log entries found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <script src="../static/backend/js/menu.js"></script>
+
+    <script>
+      let currentSortColumn = -1;
+      let currentSortDirection = 1;
+      let allLogs = [];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Store all logs data
+        allLogs = Array.from(document.querySelectorAll(".log-row")).map(
+          (row) => ({
+            element: row,
+            id: parseInt(row.getAttribute("data-id")),
+            user: row.getAttribute("data-user"),
+            action: row.getAttribute("data-action"),
+            description: row.getAttribute("data-description"),
+            timestamp: new Date(row.getAttribute("data-timestamp")),
+          }),
+        );
+
+        document
+          .getElementById("search-input")
+          .addEventListener("input", function () {
+            applyFilters();
+          });
+
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        document.getElementById("date-from").value = thirtyDaysAgo
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("date-to").value = today
+          .toISOString()
+          .split("T")[0];
+      });
+
+      function applyFilters() {
+        const userFilter = document
+          .getElementById("user-filter")
+          .value.toLowerCase();
+        const actionFilter = document.getElementById("action-filter").value;
+        const dateFrom = document.getElementById("date-from").value;
+        const dateTo = document.getElementById("date-to").value;
+        const searchTerm = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+
+        let visibleCount = 0;
+
+        allLogs.forEach((logData) => {
+          let showRow = true;
+
+          if (userFilter && !logData.user.toLowerCase().includes(userFilter)) {
+            showRow = false;
+          }
+
+          if (actionFilter && logData.action !== actionFilter) {
+            showRow = false;
+          }
+
+          if (dateFrom) {
+            const logDate = new Date(logData.timestamp)
+              .toISOString()
+              .split("T")[0];
+            if (logDate < dateFrom) {
+              showRow = false;
+            }
+          }
+          if (dateTo) {
+            const logDate = new Date(logData.timestamp)
+              .toISOString()
+              .split("T")[0];
+            if (logDate > dateTo) {
+              showRow = false;
+            }
+          }
+
+          if (searchTerm) {
+            const searchText =
+              logData.user.toLowerCase() +
+              " " +
+              logData.action.toLowerCase() +
+              " " +
+              logData.description.toLowerCase();
+            if (!searchText.includes(searchTerm)) {
+              showRow = false;
+            }
+          }
+
+          logData.element.style.display = showRow ? "" : "none";
+          if (showRow) visibleCount++;
+        });
+
+        document.getElementById("results-count").textContent =
+          `Showing ${visibleCount} log entries`;
+      }
+
+      function resetFilters() {
+        document.getElementById("user-filter").value = "";
+        document.getElementById("action-filter").value = "";
+        document.getElementById("date-from").value = "";
+        document.getElementById("date-to").value = "";
+        document.getElementById("search-input").value = "";
+
+        applyFilters();
+      }
+
+      function sortTable(columnIndex) {
+        const tbody = document.getElementById("table-body");
+        const rows = Array.from(
+          tbody.querySelectorAll('.log-row:not([style*="display: none"])'),
+        );
+
+        if (currentSortColumn === columnIndex) {
+          currentSortDirection *= -1;
+        } else {
+          currentSortColumn = columnIndex;
+          currentSortDirection = 1;
+        }
+
+        rows.sort((a, b) => {
+          let aValue, bValue;
+
+          switch (columnIndex) {
+            case 0:
+              aValue = parseInt(a.getAttribute("data-id"));
+              bValue = parseInt(b.getAttribute("data-id"));
+              break;
+            case 1:
+              aValue = a.getAttribute("data-user").toLowerCase();
+              bValue = b.getAttribute("data-user").toLowerCase();
+              break;
+            case 2:
+              aValue = a.getAttribute("data-action").toLowerCase();
+              bValue = b.getAttribute("data-action").toLowerCase();
+              break;
+            case 3:
+              aValue = a.getAttribute("data-description").toLowerCase();
+              bValue = b.getAttribute("data-description").toLowerCase();
+              break;
+            case 4:
+              aValue = new Date(a.getAttribute("data-timestamp"));
+              bValue = new Date(b.getAttribute("data-timestamp"));
+              break;
+            default:
+              aValue = a.cells[columnIndex].textContent;
+              bValue = b.cells[columnIndex].textContent;
+          }
+
+          if (aValue < bValue) return -1 * currentSortDirection;
+          if (aValue > bValue) return 1 * currentSortDirection;
+          return 0;
+        });
+
+        rows.forEach((row) => tbody.appendChild(row));
+
+        updateSortIndicators(columnIndex);
+      }
+
+      function updateSortIndicators(columnIndex) {
+        const headers = document.querySelectorAll(".sortable i");
+        headers.forEach((icon) => {
+          icon.className = "fas fa-sort";
+        });
+
+        const currentHeader =
+          document.querySelectorAll(".sortable")[columnIndex];
+        const icon = currentHeader.querySelector("i");
+        icon.className =
+          currentSortDirection === 1 ? "fas fa-sort-up" : "fas fa-sort-down";
+      }
+
+      function exportToCSV() {
+        const visibleRows = allLogs.filter(
+          (logData) => logData.element.style.display !== "none",
+        );
+
+        if (visibleRows.length === 0) {
+          alert("No data to export!");
+          return;
+        }
+
+        let csvContent = "ID,User,Action,Description,Timestamp\n";
+
+        visibleRows.forEach((logData) => {
+          const row = logData.element;
+          const cells = row.querySelectorAll("td");
+          const rowData = [
+            cells[0].textContent,
+            `"${cells[1].textContent}"`,
+            `"${cells[2].textContent}"`,
+            `"${cells[3].textContent}"`,
+            `"${cells[4].textContent}"`,
+          ];
+          csvContent += rowData.join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute("hidden", "");
+        a.setAttribute("href", url);
+        a.setAttribute(
+          "download",
+          `log_history_${new Date().toISOString().split("T")[0]}.csv`,
+        );
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    </script>
+  </body>
+</html>

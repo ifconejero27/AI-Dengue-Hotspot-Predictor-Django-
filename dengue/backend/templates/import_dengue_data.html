@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Import Dengue Data</h2>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.year.id_for_label }}" class="form-label">Year</label>
+                {{ form.year }}
+                {% if form.year.errors %}
+                    <div class="text-danger">{{ form.year.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="{{ form.csv_file.id_for_label }}" class="form-label">CSV File</label>
+                {{ form.csv_file }}
+                {% if form.csv_file.errors %}
+                    <div class="text-danger">{{ form.csv_file.errors }}</div>
+                {% endif %}
+                <div class="form-text">
+                    Expected format: BARANGAY, WEEK 1, WEEK 2, ... WEEK 52 columns
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Import Data</button>
+        </form>
+    </div>
+</body>
+</html>
