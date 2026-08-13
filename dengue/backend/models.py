@@ -142,10 +142,10 @@ class WeatherData(models.Model):
     barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE)
     date_recorded = models.DateField()
     time_recorded = models.TimeField()
-    temperature = models.DecimalField(max_digits=4, decimal_places=1)  # in Celsius
-    humidity = models.DecimalField(max_digits=4, decimal_places=1)  # percentage
-    rainfall = models.DecimalField(max_digits=6, decimal_places=2)  # in mm
-    windspeed = models.DecimalField(max_digits=5, decimal_places=2)  # in km/h
+    temperature = models.DecimalField(max_digits=4, decimal_places=1)  
+    humidity = models.DecimalField(max_digits=4, decimal_places=1)    
+    rainfall = models.DecimalField(max_digits=6, decimal_places=2)  
+    windspeed = models.DecimalField(max_digits=5, decimal_places=2)  
     data_source = models.CharField(max_length=10, choices=DATA_SOURCE_CHOICES)
     
     def __str__(self):
@@ -155,7 +155,7 @@ class WeatherData(models.Model):
         verbose_name_plural = "Weather Data"
         unique_together = ('barangay', 'date_recorded', 'time_recorded')
 
-# =======================
+ 
 # Dengue Case Model
 
 class DengueCase(models.Model):
@@ -171,9 +171,7 @@ class DengueCase(models.Model):
     
     class Meta:
         verbose_name_plural = "Dengue Cases"
-
-# =======================
-# Prediction Result Model
+ 
 
 class PredictionResult(models.Model):
     prediction_result_id = models.AutoField(primary_key=True)
@@ -196,9 +194,7 @@ class PredictionResult(models.Model):
     class Meta:
         verbose_name_plural = "Prediction Results"
         unique_together = ('barangay', 'year_prediction', 'week_prediction')  # CHANGED THIS
-
-# =======================
-# Log History Model
+ 
 class LogHistory(models.Model):
     LOG_TYPE_CHOICES = [
         ('LOGIN', 'Account Login'),
@@ -225,8 +221,7 @@ class LogHistory(models.Model):
 
 
 
-# =======================
-# Weather tables
+ 
 
 class CurrentWeather(models.Model):
     location = models.CharField(max_length=100, db_index=True)
@@ -298,7 +293,7 @@ class HistoricalWeather(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for record creation
 
     class Meta:
-        unique_together = ('location', 'date')  # Ensure no duplicate entries for the same location and date
+        unique_together = ('location', 'date')  
         indexes = [
             models.Index(fields=['location', 'date']),
         ]
@@ -306,10 +301,7 @@ class HistoricalWeather(models.Model):
 
     def __str__(self):
         return f"{self.location} on {self.date}: Max Temp {self.temperature_2m_max}°C, Min Temp {self.temperature_2m_min}°C"
-    
-# =======================
-# messaging model
-
+ 
 class Message(models.Model):
     sender = models.CharField(max_length=100)
     recipient = models.CharField(max_length=100)
@@ -324,9 +316,7 @@ class Message(models.Model):
     class Meta:
         verbose_name_plural = "Messages"
         ordering = ['-timestamp']
-
-# =======================
-# weekly average
+ 
 
 class WeeklyAverage(models.Model):
     weekly_id = models.AutoField(primary_key=True)
@@ -336,13 +326,13 @@ class WeeklyAverage(models.Model):
     start_date = models.DateField()  # First day of the week
     end_date = models.DateField()    # Last day of the week
     
-    # Weekly averages
+    
     avg_temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     avg_humidity = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     avg_rainfall_chance = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     avg_wind_speed = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     
-    # Additional metrics
+   
     total_rainy_days = models.PositiveIntegerField(default=0)  # Days with high rainfall chance
     max_temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     min_temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
@@ -361,7 +351,7 @@ class WeeklyAverage(models.Model):
     def week_range(self):
         return f"{self.start_date} to {self.end_date}"
     
-    # Add this to your existing models.py
+    
 class ModelVersion(models.Model):
     model_version_id = models.AutoField(primary_key=True)
     barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE)
@@ -378,9 +368,7 @@ class ModelVersion(models.Model):
     def __str__(self):
         return f"{self.barangay.name} - v{self.version}"
     
-
-# =======================
-# OTP Model
+ 
 
 class OTP(models.Model):
     otp_type = models.CharField(max_length=30)
