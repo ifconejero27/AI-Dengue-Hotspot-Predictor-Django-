@@ -1,4 +1,4 @@
-# Predicting Dengue Hotspots in Malabon City through AI
+# Predicting Dengue Hotspots in Malabon City through AI and Integrated Weather-Case Analysis
 An AI-powered web dashboard built using Python and Django to predict dengue outbreaks in Malabon City based on weather-case analysis.
 **Capstone Project | BS Information Technology**
 
