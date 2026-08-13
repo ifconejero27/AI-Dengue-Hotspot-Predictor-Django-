@@ -48,9 +48,7 @@ class LogHistoryAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'description')
 
 
-# =======================
-# Weather Models Admin
-# =======================
+ 
 @admin.register(CurrentWeather)
 class CurrentWeatherAdmin(admin.ModelAdmin):
     list_display = ('location', 'time', 'rainfall_chance', 'temperature', 'humidity', 'is_day', 'wind_speed_10m', 'weather_code', 'created_at')
@@ -160,8 +158,7 @@ class WeeklyAverageAdmin(admin.ModelAdmin):
         return f"{obj.start_date} to {obj.end_date}"
     week_range_display.short_description = 'Week Range'
     week_range_display.admin_order_field = 'start_date'
-    
-    # Custom actions
+  
     actions = ['recalculate_weekly_averages']
     
     def recalculate_weekly_averages(self, request, queryset):
@@ -169,23 +166,18 @@ class WeeklyAverageAdmin(admin.ModelAdmin):
         calculate_weekly_averages()
         self.message_user(request, "Weekly averages recalculated successfully!")
     recalculate_weekly_averages.short_description = "Recalculate selected weekly averages"
-    
-    # Customize the changelist view
+   
     def changelist_view(self, request, extra_context=None):
-        # Add some stats to the context
+ 
         extra_context = extra_context or {}
         extra_context['total_weeks'] = WeeklyAverage.objects.count()
         extra_context['latest_week'] = WeeklyAverage.objects.order_by('-year', '-week').first()
         return super().changelist_view(request, extra_context=extra_context)
-    
-    # Add custom methods to the model in admin
+   
     def get_queryset(self, request):
         return super().get_queryset(request).order_by('-year', '-week')
     
-# =======================
-# End of Weather Models Admin
-# =======================
-
+ 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('sender', 'recipient', 'subject', 'timestamp')
