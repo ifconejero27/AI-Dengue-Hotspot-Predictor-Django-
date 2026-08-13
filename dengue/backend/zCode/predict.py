@@ -12,14 +12,14 @@ from django.conf import settings
 import warnings
 warnings.filterwarnings('ignore')
 
-# Global model directory
+
 MODEL_DIR = os.path.join(settings.BASE_DIR, 'ml_models')
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 def get_historical_weather_fallback(year, week):
     """Get weather data from WeeklyAverage with fallback"""
     try:
-        # Try to get from WeeklyAverage first (this is your main source)
+       
         weekly_avg = WeeklyAverage.objects.filter(year=year, week=week).first()
         
         if weekly_avg:
@@ -71,7 +71,7 @@ def train_new_model(barangay, X, y):
             model.fit(X, y)
             return model
         
-        # Use GridSearchCV for better models with sufficient data
+        
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
         model = GridSearchCV(
@@ -81,12 +81,12 @@ def train_new_model(barangay, X, y):
                 'max_depth': [5, 10, None],
                 'min_samples_split': [2, 5]
             },
-            cv=min(3, len(X_train) - 1),  # Adjust CV based on data size
+            cv=min(3, len(X_train) - 1),  
             scoring='neg_mean_absolute_error'
         )
         model.fit(X_train, y_train)
         
-        # Calculate accuracy
+      
         y_pred = model.predict(X_test)
         mae = mean_absolute_error(y_test, y_pred)
         print(f"✅ Model trained for {barangay.name} - MAE: {mae:.2f}")
@@ -95,7 +95,7 @@ def train_new_model(barangay, X, y):
         
     except Exception as e:
         print(f"❌ Error training model for {barangay.name}: {str(e)}")
-        # Fallback to simple model
+     
         model = RandomForestRegressor(n_estimators=50, random_state=42)
         model.fit(X, y)
         return model
@@ -103,12 +103,12 @@ def train_new_model(barangay, X, y):
 def incremental_training(barangay, existing_model, X, y):
     """Update existing model with new data"""
     try:
-        # For Random Forest, we can use warm_start to add more trees
+      
         if hasattr(existing_model, 'warm_start'):
             existing_model.n_estimators += 20
             existing_model.fit(X, y)
         else:
-            # Retrain completely if warm_start not available
+          
             existing_model = train_new_model(barangay, X, y)
         
         print(f"🔄 Incrementally updated model for {barangay.name}")
@@ -120,7 +120,7 @@ def incremental_training(barangay, existing_model, X, y):
 
 def prepare_training_data(barangay):
     """Prepare features and targets for training using WeeklyAverage data"""
-    # ✅ USE ALL DATA - no year exclusion!
+
     historical_cases = DengueCase.objects.filter(
         barangay=barangay
     ).order_by('year_reported', 'week_reported')
@@ -138,7 +138,7 @@ def prepare_training_data(barangay):
         year = row['year_reported']
         week = row['week_reported']
         
-        # Get ALL weather data from WeeklyAverage with fallback
+
         weather = get_historical_weather_fallback(year, week)
         
         weather_data.append({
@@ -153,13 +153,12 @@ def prepare_training_data(barangay):
 
     df_weather = pd.DataFrame(weather_data)
     
-    # Merge cases with weather
+
     merged = pd.merge(df_cases, df_weather, on=['year_reported', 'week_reported'])
     
     if merged.empty:
         return None, None
 
-    # Create lag features
     try:
         merged['lag1_cases'] = merged['num_cases'].shift(1)
         merged['lag1_rainfall'] = merged['rainfall'].shift(1)
@@ -174,11 +173,11 @@ def prepare_training_data(barangay):
     if merged.empty:
         return None, None
 
-    # Prepare features and target
+
     feature_columns = ['lag1_cases', 'lag1_rainfall', 'lag2_rainfall', 
                       'temp_max', 'temp_min', 'wind_speed', 'lag1_humidity']
     
-    # Only use columns that exist
+
     available_columns = [col for col in feature_columns if col in merged.columns]
     
     if not available_columns:
@@ -195,7 +194,7 @@ def prepare_training_data(barangay):
 def create_default_prediction(barangay, target_year, target_week):
     """Create a default prediction for barangays with insufficient data"""
     try:
-        # Use average of similar barangays or conservative estimate
+
         avg_cases = DengueCase.objects.filter(
             barangay__name__icontains=barangay.name.split()[0]  # Similar area
         ).aggregate(avg=models.Avg('num_cases'))['avg'] or 2.0
@@ -208,7 +207,7 @@ def create_default_prediction(barangay, target_year, target_week):
             week_prediction=target_week,
             defaults={
                 'numerical_risk_level': predicted_cases,
-                'confidence_score': 0.3,  # Low confidence for default predictions
+                'confidence_score': 0.3, 
                 'risk_level': "Low" if predicted_cases < 3 else "Moderate",
                 'trend': 'neutral'
             }
@@ -235,7 +234,7 @@ def predict_dengue_risk():
         try:
             model_path = os.path.join(MODEL_DIR, f"model_{barangay.barangay_id}.pkl")
 
-            # Prepare training data
+
             X, y = prepare_training_data(barangay)
             if X is None or len(X) < 3:
                 print(f"⚠️ Insufficient data for {barangay.name}, creating default prediction")
@@ -246,7 +245,7 @@ def predict_dengue_risk():
                 failed_predictions += 1
                 continue
 
-            # Load or train model
+    
             needs_retraining = should_retrain_model(barangay)
             if os.path.exists(model_path) and not needs_retraining:
                 model = joblib.load(model_path)
@@ -269,10 +268,10 @@ def predict_dengue_risk():
                 )
                 print(f"📈 Created model v{new_version} for {barangay.name}")
 
-            # Get the last known data as base for predictions
+ 
             last_row = X.iloc[-1:].copy()
 
-            # 🔁 Predict for the next 3 weeks (cascading)
+
             for week_offset in range(0, 3):
                 target_week = current_week + week_offset
                 target_year = current_year
@@ -282,7 +281,6 @@ def predict_dengue_risk():
 
                 target_weather = get_historical_weather_fallback(target_year, target_week)
 
-                # Update feature inputs using predicted or lagged values
                 last_row['lag1_rainfall'] = target_weather['rainfall']
                 last_row['lag2_rainfall'] = last_row['lag1_rainfall']
                 last_row['temp_max'] = target_weather['temp_max']
@@ -290,13 +288,12 @@ def predict_dengue_risk():
                 last_row['wind_speed'] = target_weather['wind_speed']
                 last_row['lag1_humidity'] = target_weather['humidity']
 
-                # 🔮 Predict dengue cases
+    
                 predicted = max(0, float(model.predict(last_row)[0]))
 
-                # 🧩 Compute confidence (updated version below)
+
                 confidence = calculate_confidence(barangay, X, y, model, week_offset)
 
-                # 🩸 Risk categorization
                 if predicted >= 8:
                     risk_level = "Very High"
                 elif predicted >= 5:
@@ -306,7 +303,6 @@ def predict_dengue_risk():
                 else:
                     risk_level = "Low"
 
-                # 📈 Determine trend
                 prev_week = target_week - 1 if target_week > 1 else 52
                 prev_year = target_year if target_week > 1 else target_year - 1
 
@@ -326,7 +322,7 @@ def predict_dengue_risk():
                 else:
                     trend = "neutral"
 
-                # 💾 Save to database
+      
                 PredictionResult.objects.update_or_create(
                     barangay=barangay,
                     year_prediction=target_year,
@@ -341,7 +337,6 @@ def predict_dengue_risk():
 
                 print(f"✅ {barangay.name} | Week {target_week}: {predicted:.2f} cases ({risk_level}) | {confidence:.1f}% | Trend={trend}")
 
-                # 🔁 Update lag for next iteration (cascade prediction)
                 last_row['lag1_cases'] = predicted
                 last_row['lag1_rainfall'] = target_weather['rainfall']
                 last_row['lag2_rainfall'] = last_row['lag1_rainfall']
@@ -370,7 +365,7 @@ def predict_dengue_risk():
 
 def debug_weekly_averages():
     """Check what WeeklyAverage data you have"""
-    weekly_data = WeeklyAverage.objects.all().order_by('year', 'week')[:10]  # First 10 records
+    weekly_data = WeeklyAverage.objects.all().order_by('year', 'week')[:10]  
     
     print("=== WEEKLY AVERAGE DATA SAMPLE ===")
     for wa in weekly_data:
@@ -380,45 +375,43 @@ def debug_weekly_averages():
               f"Humidity={wa.avg_humidity}, "
               f"Wind={wa.avg_wind_speed}")
     
-    # Check data counts
+ 
     total_weekly = WeeklyAverage.objects.count()
     years_with_data = WeeklyAverage.objects.values_list('year', flat=True).distinct()
     
     print(f"\n📊 Total WeeklyAverage records: {total_weekly}")
     print(f"📅 Years with data: {sorted(years_with_data)}")
 
-# Call this to debug your WeeklyAverage data
-# debug_weekly_averages()
+
 
 def calculate_confidence(barangay, X, y, model, week_offset):
     """Improved confidence with softer decay and normalized performance scoring."""
     try:
         total_samples = len(X)
-        data_quality = min(0.3, 0.3 * (total_samples / 50))  # up to 0.3 for good data
+        data_quality = min(0.3, 0.3 * (total_samples / 50))
 
-        # Model performance (MAE-based)
         if len(X) >= 10:
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
             mae = mean_absolute_error(y_test, y_pred)
             y_range = max(1, y.max() - y.min())
-            performance_score = max(0, 1 - (mae / (y_range * 0.7)))  # softened normalization
+            performance_score = max(0, 1 - (mae / (y_range * 0.7)))
             model_performance = performance_score * 0.45
         else:
             model_performance = 0.15
 
-        # Feature completeness
+    
         important_features = ['lag1_cases', 'lag1_rainfall', 'temp_max', 'lag1_humidity']
         feature_coverage = len([f for f in important_features if f in X.columns]) / len(important_features)
         feature_strength = feature_coverage * 0.15
 
-        # Historical consistency placeholder
+ 
         historical_consistency = 0.1
 
-        # Combine and decay
+
         base_confidence = data_quality + model_performance + feature_strength + historical_consistency
-        time_decay = week_offset * 0.05  # only -5% per week
+        time_decay = week_offset * 0.05 
         final_confidence = max(0.4, min(0.95, base_confidence - time_decay))
         percentage = round(final_confidence * 100, 2)
 
@@ -431,22 +424,18 @@ def calculate_confidence(barangay, X, y, model, week_offset):
         print(f"❌ Confidence error for {barangay.name}: {str(e)}")
         return max(0.4, 0.8 - week_offset * 0.05)
     
-# ==========================================================
 
-# =============================================================================
-# LINEAR REGRESSION IMPLEMENTATION - ADDED BELOW EXISTING CODE
-# =============================================================================
 
-# Global model directory for linear models
+
 LINEAR_MODEL_DIR = os.path.join(settings.BASE_DIR, 'linear_models')
 os.makedirs(LINEAR_MODEL_DIR, exist_ok=True)
 
-# Store linear predictions in memory (not database)
+
 linear_predictions_cache = {}
 
 def prepare_linear_training_data(barangay):
     """Prepare features and targets for Linear Regression training"""
-    # Get all historical data
+
     historical_cases = DengueCase.objects.filter(
         barangay=barangay
     ).order_by('year_reported', 'week_reported')
@@ -477,23 +466,22 @@ def prepare_linear_training_data(barangay):
         })
 
     df_weather = pd.DataFrame(weather_data)
-    
-    # Merge cases with weather
+
     merged = pd.merge(df_cases, df_weather, on=['year_reported', 'week_reported'])
     
     if merged.empty:
         return None, None, None
 
-    # Create features for linear regression
+
     try:
-        # Lag features (same as RF for fair comparison)
+ 
         merged['lag1_cases'] = merged['num_cases'].shift(1)
         merged['lag1_rainfall'] = merged['rainfall'].shift(1)
         merged['lag2_rainfall'] = merged['rainfall'].shift(2)
         merged['lag1_temp_max'] = merged['temp_max'].shift(1)
         merged['lag1_humidity'] = merged['humidity'].shift(1)
         
-        # Additional features that work well with linear models
+   
         merged['temp_range'] = merged['temp_max'] - merged['temp_min']
         merged['rain_temp_interaction'] = merged['rainfall'] * merged['temp_max']
         
@@ -505,14 +493,14 @@ def prepare_linear_training_data(barangay):
     if merged.empty:
         return None, None, None
 
-    # Prepare features and target
+
     feature_columns = [
         'lag1_cases', 'lag1_rainfall', 'lag2_rainfall', 
         'temp_max', 'temp_min', 'wind_speed', 'lag1_humidity',
         'temp_range', 'rain_temp_interaction'
     ]
     
-    # Only use columns that exist
+
     available_columns = [col for col in feature_columns if col in merged.columns]
     
     if not available_columns:
@@ -522,7 +510,7 @@ def prepare_linear_training_data(barangay):
     X = merged[available_columns]
     y = merged['num_cases']
     
-    # Scale features for linear regression
+ 
     from sklearn.preprocessing import StandardScaler
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
@@ -540,11 +528,9 @@ def train_linear_model(barangay, X, y):
             model = LinearRegression()
             model.fit(X, y)
             return model, 'linear_simple'
-        
-        # Split data
+      
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        
-        # Try different linear models
+      
         from sklearn.linear_model import LinearRegression, Ridge, Lasso
         from sklearn.model_selection import cross_val_score
         from sklearn.metrics import r2_score
@@ -560,7 +546,7 @@ def train_linear_model(barangay, X, y):
         best_name = ''
         
         for name, model in models.items():
-            # Cross-validation to select best model
+            
             cv_scores = -cross_val_score(model, X_train, y_train, 
                                        cv=min(3, len(X_train)-1), 
                                        scoring='neg_mean_absolute_error')
@@ -594,7 +580,7 @@ def calculate_linear_confidence(barangay, X, y, model, week_offset):
     """Calculate confidence for linear regression predictions"""
     try:
         from sklearn.metrics import r2_score
-        # R² based confidence
+       
         y_pred = model.predict(X)
         r2 = max(0, r2_score(y, y_pred))
         
@@ -608,7 +594,7 @@ def calculate_linear_confidence(barangay, X, y, model, week_offset):
         else:
             feature_confidence = 0.15
         
-        # Combine confidence factors
+     
         base_confidence = (r2 * 0.4 + data_confidence * 0.4 + feature_confidence * 0.2)
         time_decay = week_offset * 0.08
         
@@ -635,8 +621,7 @@ def predict_with_linear_regression():
     failed_predictions = 0
 
     print(f"🚀 Starting LINEAR REGRESSION prediction for {len(barangays)} barangays...")
-    
-    # Clear previous linear predictions
+     
     global linear_predictions_cache
     linear_predictions_cache = {}
 
@@ -645,14 +630,14 @@ def predict_with_linear_regression():
             model_path = os.path.join(LINEAR_MODEL_DIR, f"linear_model_{barangay.barangay_id}.pkl")
             scaler_path = os.path.join(LINEAR_MODEL_DIR, f"scaler_{barangay.barangay_id}.pkl")
 
-            # Prepare training data with scaling
+           
             X, y, scaler = prepare_linear_training_data(barangay)
             if X is None or len(X) < 3:
                 print(f"⚠️ Insufficient data for {barangay.name}, skipping linear prediction")
                 failed_predictions += 1
                 continue
 
-            # Train or load linear model
+     
             needs_retraining = should_retrain_model(barangay)
             if os.path.exists(model_path) and os.path.exists(scaler_path) and not needs_retraining:
                 model = joblib.load(model_path)
@@ -664,7 +649,7 @@ def predict_with_linear_regression():
                 joblib.dump(scaler, scaler_path)
                 print(f"📈 Created linear model for {barangay.name}")
 
-            # Get the last known data point
+         
             if len(X) > 0:
                 last_features = X[-1:].copy()
             else:
@@ -672,7 +657,7 @@ def predict_with_linear_regression():
                 failed_predictions += 1
                 continue
 
-            # Predict for next 3 weeks
+           
             for week_offset in range(0, 3):
                 target_week = current_week + week_offset
                 target_year = current_year
@@ -680,10 +665,10 @@ def predict_with_linear_regression():
                     target_week -= 52
                     target_year += 1
 
-                # Update features for prediction
+               
                 weather = get_historical_weather_fallback(target_year, target_week)
                 
-                # Update feature values (simplified)
+               
                 if last_features.shape[1] >= 7:
                     last_features[0, 1] = weather['rainfall']  # lag1_rainfall
                     last_features[0, 2] = last_features[0, 1]  # lag2_rainfall
@@ -692,11 +677,11 @@ def predict_with_linear_regression():
                     last_features[0, 5] = weather['wind_speed']  # wind_speed
                     last_features[0, 6] = weather['humidity']   # lag1_humidity
 
-                # Make prediction
+              
                 predicted = max(0, float(model.predict(last_features)[0]))
                 confidence = calculate_linear_confidence(barangay, X, y, model, week_offset)
 
-                # Risk categorization
+           
                 if predicted >= 8:
                     risk_level = "Very High"
                 elif predicted >= 5:
@@ -705,8 +690,7 @@ def predict_with_linear_regression():
                     risk_level = "Moderate"
                 else:
                     risk_level = "Low"
-
-                # Store prediction in memory (NOT database)
+ 
                 prediction_key = f"{barangay.barangay_id}_{target_year}_{target_week}"
                 linear_predictions_cache[prediction_key] = {
                     "barangay": barangay,
@@ -730,9 +714,8 @@ def predict_with_linear_regression():
                 })
 
                 successful_predictions += 1
-
-                # Update for next prediction (cascade)
-                last_features[0, 0] = predicted  # Update lag1_cases
+ 
+                last_features[0, 0] = predicted  
 
         except Exception as e:
             print(f"❌ Linear regression error for {barangay.name}: {str(e)}")
@@ -741,10 +724,7 @@ def predict_with_linear_regression():
 
     print(f"🎯 LINEAR PREDICTION complete: {successful_predictions} successful, {failed_predictions} failed")
     return predictions
-
-# =============================================================================
-# MODEL COMPARISON FUNCTIONS - ADDED BELOW EXISTING CODE
-# =============================================================================
+ 
 
 def compare_model_confidence():
     """Compare and print confidence scores between Linear Regression (from memory) and Random Forest (from database)"""
@@ -762,19 +742,19 @@ def compare_model_confidence():
     
     for barangay in barangays:
         try:
-            # Get Random Forest prediction from database
+ 
             rf_pred = PredictionResult.objects.filter(
                 barangay=barangay,
                 year_prediction=current_year,
                 week_prediction=current_week
             ).first()
             
-            # Get Linear Regression prediction from memory cache
+   
             linear_pred_key = f"{barangay.barangay_id}_{current_year}_{current_week}"
             linear_pred = linear_predictions_cache.get(linear_pred_key)
             
             if linear_pred and rf_pred:
-                # Both models have predictions
+ 
                 comparison_results.append({
                     'barangay': barangay.name,
                     'linear_risk': linear_pred['risk_level'],
@@ -785,7 +765,7 @@ def compare_model_confidence():
                     'rf_cases': rf_pred.numerical_risk_level
                 })
                 
-                # Color coding for confidence differences
+  
                 conf_diff = rf_pred.confidence_score - linear_pred['confidence']
                 if conf_diff > 20:
                     conf_indicator = "🟢 RF +"
@@ -802,24 +782,24 @@ def compare_model_confidence():
                       f"R.Forest: {rf_pred.risk_level:.<10} {rf_pred.confidence_score:>3}% {conf_indicator}")
                       
             elif linear_pred and not rf_pred:
-                # Only Linear has prediction
+ 
                 print(f"🏘️  {barangay.name:.<20} Linear: {linear_pred['risk_level']:.<10} {linear_pred['confidence']:>3}% | "
                       f"R.Forest: {'NO DATA':.<10} {'--':>3}% 🔶")
                       
             elif not linear_pred and rf_pred:
-                # Only RF has prediction
+ 
                 print(f"🏘️  {barangay.name:.<20} Linear: {'NO DATA':.<10} {'--':>3}% | "
                       f"R.Forest: {rf_pred.risk_level:.<10} {rf_pred.confidence_score:>3}% 🔶")
                       
             else:
-                # No predictions
+     
                 print(f"🏘️  {barangay.name:.<20} Linear: {'NO DATA':.<10} {'--':>3}% | "
                       f"R.Forest: {'NO DATA':.<10} {'--':>3}% ❌")
                       
         except Exception as e:
             print(f"❌ Error comparing {barangay.name}: {str(e)}")
     
-    # Print summary statistics
+ 
     if comparison_results:
         print("\n" + "=" * 70)
         print("📊 SUMMARY STATISTICS")
@@ -842,15 +822,13 @@ def compare_model_confidence():
         print(f"   Linear Regression: {avg_linear_cases:.2f} cases")
         print(f"   Random Forest:     {avg_rf_cases:.2f} cases")
         print(f"   Difference:        {avg_rf_cases - avg_linear_cases:+.2f} cases")
-        
-        # Count risk level agreements
+  
         risk_agreement = len(df[df['linear_risk'] == df['rf_risk']])
         total_comparisons = len(df)
         agreement_rate = (risk_agreement / total_comparisons) * 100
         
         print(f"\n🤝 Risk Level Agreement: {risk_agreement}/{total_comparisons} ({agreement_rate:.1f}%)")
-        
-        # Confidence winners
+     
         linear_wins = len(df[df['linear_confidence'] > df['rf_confidence']])
         rf_wins = len(df[df['rf_confidence'] > df['linear_confidence']])
         ties = len(df[df['linear_confidence'] == df['rf_confidence']])
@@ -865,9 +843,8 @@ def compare_model_confidence():
         print("❌ No comparison data available. Make sure both models have run successfully.")
         return None
 
-# =============================================================================
-# SINGLE COMMAND TO RUN BOTH MODELS AND COMPARE
-# =============================================================================
+ 
+ 
 
 def compare_linear_vs_random_forest():
     """
@@ -878,19 +855,19 @@ def compare_linear_vs_random_forest():
     print("🚀 SINGLE COMMAND: LINEAR REGRESSION vs RANDOM FOREST COMPARISON")
     print("🎯" * 60)
     
-    # Step 1: Run Linear Regression predictions (stores in memory)
+  
     print("\n" + "="*60)
     print("📊 STEP 1: RUNNING LINEAR REGRESSION PREDICTIONS")
     print("="*60)
     linear_results = predict_with_linear_regression()
     
-    # Step 2: Run Random Forest predictions (stores in database)
+ 
     print("\n" + "="*60)
     print("🌳 STEP 2: RUNNING RANDOM FOREST PREDICTIONS")
     print("="*60)
     rf_results = predict_dengue_risk()
     
-    # Step 3: Show comparison table
+ 
     print("\n" + "="*60)
     print("📋 STEP 3: COMPARISON TABLE - LINEAR vs RANDOM FOREST")
     print("="*60)
@@ -906,14 +883,9 @@ def compare_linear_vs_random_forest():
         'comparison': comparison_df
     }
 
-# =============================================================================
-# USAGE EXAMPLES - ADDED AT THE END
-# =============================================================================
+ 
 
 if __name__ == "__main__":
-    # SINGLE COMMAND: Run this one function to compare both models
+ 
     compare_linear_vs_random_forest()
-    
-    # Alternative individual functions (uncomment if needed):
-    # predict_dengue_risk()                    # Run only Random Forest
-    # predict_with_linear_regression()         # Run only Linear Regression
+ 
