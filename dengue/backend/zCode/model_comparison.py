@@ -1,7 +1,7 @@
 def print_comparison_table():
     """Print the comparison data in a nice table format"""
     
-    # Your data
+    
     data = [
         ["Acacia", "Very High", 30.00, "Low", 89.17, 8.24, 0],
         ["Baritan", "Low", 30.00, "Low", 89.14, 0.80, 0],
@@ -28,20 +28,20 @@ def print_comparison_table():
 
     print()
     
-    # Print table header
+   
     print("=" * 95)
     print(f"{'BARANGAY':<18} {'LINEAR MODEL':<20} {'RANDOM FOREST':<20} {'CONFIDENCE'}")
     print(f"{'':<18} {'Risk':<10} {'Conf':<8} {'Risk':<10} {'Conf':<8} {'Difference'}")
     print("=" * 95)
     
-    # Print data rows
+   
     for row in data:
         barangay, linear_risk, linear_conf, rf_risk, rf_conf, linear_cases, rf_cases = row
         
-        # Calculate confidence difference
+        
         conf_diff = rf_conf - linear_conf
         
-        # Color coding for confidence differences
+      
         if conf_diff > 40:
             conf_indicator = "🟢🟢 RF +"
         elif conf_diff > 20:
@@ -62,8 +62,7 @@ def print_comparison_table():
         print(f"{barangay:<18} {linear_risk:<10} {linear_conf:>6.1f}%  {rf_risk:<10} {rf_conf:>6.1f}%  {conf_diff:>+7.1f}% {conf_indicator}")
     
     print("=" * 95)
-    
-    # Calculate averages
+ 
     linear_confs = [row[2] for row in data]
     rf_confs = [row[4] for row in data]
     linear_cases_list = [row[5] for row in data]
@@ -73,13 +72,12 @@ def print_comparison_table():
     avg_rf_conf = sum(rf_confs) / len(rf_confs)
     avg_linear_cases = sum(linear_cases_list) / len(linear_cases_list)
     avg_rf_cases = sum(rf_cases_list) / len(rf_cases_list)
-    
-    # Count risk level agreements
+ 
     risk_agreement = sum(1 for row in data if row[1] == row[3])
     total_comparisons = len(data)
     agreement_rate = (risk_agreement / total_comparisons) * 100
     
-    # Confidence winners
+ 
     linear_wins = sum(1 for row in data if row[2] > row[4])
     rf_wins = sum(1 for row in data if row[4] > row[2])
     ties = sum(1 for row in data if row[2] == row[4])
@@ -109,8 +107,7 @@ def print_comparison_table():
     print(f"   │ {'Random Forest wins:':<25} {rf_wins:>2} barangays {'│':<8}")
     print(f"   │ {'Ties:':<25} {ties:>2} barangays {'│':<8}")
     print(f"   └{'─'*50}┘")
-    
-    # Confidence difference analysis
+ 
     conf_diffs = [row[4] - row[2] for row in data]
     avg_conf_diff = sum(conf_diffs) / len(conf_diffs)
     max_conf_diff = max(conf_diffs)
@@ -122,8 +119,7 @@ def print_comparison_table():
     print(f"   │ {'Maximum Difference:':<20} {max_conf_diff:>+7.1f}% {'│':<15}")
     print(f"   │ {'Minimum Difference:':<20} {min_conf_diff:>+7.1f}% {'│':<15}")
     print(f"   └{'─'*50}┘")
-    
-    # Key insights
+ 
     print(f"\n💡 KEY INSIGHTS:")
     print(f"   ┌{'─'*78}┐")
     print(f"   │ 🎯 Random Forest shows MUCH higher confidence (90.4% vs 31.2%)              │")
@@ -132,7 +128,6 @@ def print_comparison_table():
     print(f"   │ 🏆 Random Forest wins confidence comparison in ALL barangays              │")
     print(f"   │ 🔍 Maximum confidence gap: +64.5% (RF much more confident)                │")
     print(f"   └{'─'*78}┘")
-
-# Run the function
+ 
 if __name__ == "__main__":
     print_comparison_table()
