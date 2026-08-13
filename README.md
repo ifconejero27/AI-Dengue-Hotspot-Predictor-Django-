@@ -8,7 +8,7 @@ A monolithic web application engineered using the Python-powered **Django framew
 ## Tech Stack & Architecture
 * **Backend Framework:** Python / Django (MVC Architecture)
 * **Database:** SQLite / MySQL
-* **Data Visualization:** Geospatial Mapping Scripts & Integrated Chart Libraries
+* **Data Visualization:** Geospatial Mapping Scripts (leaflet.js)
 * **Version Control:** Git & GitHub
 
 ## Key Features Implemented
