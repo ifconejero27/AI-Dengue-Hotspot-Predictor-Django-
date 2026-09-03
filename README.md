@@ -1,7 +1,7 @@
 # Predicting Dengue Hotspots in Malabon City through AI and Integrated Weather-Case Analysis
 
 <p align="center">
-  <img src="assets/AI-dengue-hotspot-predictor-preview.png" alt="Dengue Hotspot Prediction System" width="900">
+  <img src="dengue/assets/AI-dengue-hotspot-predictor-preview.png" alt="Dengue Hotspot Prediction System" width="900">
 </p>
 
 <p align="center">
